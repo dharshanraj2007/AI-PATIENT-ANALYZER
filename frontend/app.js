@@ -498,7 +498,7 @@ function displayResults(result) {
     deptList.innerHTML = result.departments.map(dept => {
         const urgencyClass = dept.urgency.toLowerCase().replace('-', '');
         const borderClass = ['IMMEDIATE', 'URGENT'].includes(dept.urgency) ? 'urgent' :
-                            ['SOON', 'MODERATE'].includes(dept.urgency) ? 'soon' : 'non-urgent';
+            ['SOON', 'MODERATE'].includes(dept.urgency) ? 'soon' : 'non-urgent';
         return `
             <div class="dept-item ${borderClass}">
                 <div class="dept-icon">${deptIcons[dept.icon] || '🏥'}</div>
@@ -546,6 +546,11 @@ function initEhrUpload() {
         const file = fileInput.files[0];
         if (!file) return;
 
+        // Show loading
+        const loading = document.getElementById('loadingOverlay');
+        loading.style.display = 'flex';
+        loading.querySelector('p').textContent = 'Analyzing EHR with AI...';
+
         const formData = new FormData();
         formData.append('file', file);
 
@@ -555,31 +560,86 @@ function initEhrUpload() {
 
         status.style.display = 'flex';
         filename.textContent = file.name;
-        msg.textContent = 'Parsing document...';
+        msg.textContent = 'Extracting medical data...';
 
         try {
-            const res = await fetch(`${API_BASE}/upload-ehr`, {
+            const res = await fetch(`${API_BASE}/summarize-ehr`, {
                 method: 'POST',
                 body: formData
             });
             const result = await res.json();
 
-            if (result.success && result.extracted_data) {
-                const data = result.extracted_data;
-                const fieldCount = Object.keys(data).length;
+            if (result.success && result.summary) {
+                const summary = result.summary;
 
-                // Fill form with extracted data
-                Object.entries(data).forEach(([key, val]) => {
-                    const el = document.getElementById(key);
-                    if (el) {
-                        el.value = val;
-                        if (key === 'pain_level') {
-                            document.getElementById('painValue').textContent = val;
-                        }
+                // Auto-fill form fields from extracted data
+                const demographics = summary.patient_demographics || {};
+                const vitals = summary.vital_signs || {};
+
+                // Extract age from demographics
+                if (demographics.age) {
+                    const ageMatch = demographics.age.match(/(\d+)/);
+                    if (ageMatch) {
+                        const ageEl = document.getElementById('age');
+                        if (ageEl) ageEl.value = ageMatch[1];
                     }
-                });
+                }
 
-                msg.textContent = `Extracted ${fieldCount} fields from ${result.format} document`;
+                // Extract gender
+                if (demographics.gender) {
+                    const genderEl = document.getElementById('gender');
+                    if (genderEl) {
+                        const gender = demographics.gender.toLowerCase();
+                        genderEl.value = gender;
+                    }
+                }
+
+                // Extract vitals
+                if (vitals.heart_rate) {
+                    const hrMatch = vitals.heart_rate.match(/(\d+)/);
+                    if (hrMatch) {
+                        const hrEl = document.getElementById('heart_rate');
+                        if (hrEl) hrEl.value = hrMatch[1];
+                    }
+                }
+
+                if (vitals.blood_pressure) {
+                    const bpMatch = vitals.blood_pressure.match(/(\d+)/);
+                    if (bpMatch) {
+                        const bpEl = document.getElementById('systolic_blood_pressure');
+                        if (bpEl) bpEl.value = bpMatch[1];
+                    }
+                }
+
+                if (vitals.oxygen_saturation) {
+                    const o2Match = vitals.oxygen_saturation.match(/(\d+)/);
+                    if (o2Match) {
+                        const o2El = document.getElementById('oxygen_saturation');
+                        if (o2El) o2El.value = o2Match[1];
+                    }
+                }
+
+                if (vitals.temperature) {
+                    const tempMatch = vitals.temperature.match(/(\d+\.?\d*)/);
+                    if (tempMatch) {
+                        const tempEl = document.getElementById('body_temperature');
+                        if (tempEl) tempEl.value = tempMatch[1];
+                    }
+                }
+
+                // Display summary in Analytics page
+                console.log('EHR Summary:', summary);
+                msg.innerHTML = `✓ Extracted medical data from PDF<br><small>Patient: ${demographics.name || 'Unknown'} | Diagnosis: ${summary.diagnosis || 'N/A'}</small>`;
+
+                // Render in Analytics page
+                renderEHRAnalytics(summary);
+
+                // Auto-navigate to Analytics tab
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.getElementById('nav-analytics').classList.add('active');
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById('section-analytics').classList.add('active');
+
             } else {
                 msg.textContent = result.error || 'Could not extract data';
             }
@@ -588,9 +648,75 @@ function initEhrUpload() {
             console.error(err);
         }
 
+        loading.style.display = 'none';
         fileInput.value = '';
     });
 }
+
+// ═══════════════════════════════════════════════════
+// EHR ANALYTICS DISPLAY
+// ═══════════════════════════════════════════════════
+function renderEHRAnalytics(summary) {
+    const container = document.getElementById("ehrSummaryContent");
+
+    const demographics = summary.patient_demographics || {};
+    const vitals = summary.vital_signs || {};
+    const medications = summary.medications || [];
+    const allergies = summary.allergies || [];
+
+    container.innerHTML = `
+        <div style="padding: 1.5rem;">
+            <div style="display: grid; gap: 1rem;">
+                <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--accent-blue);">
+                    <strong style="color: var(--accent-blue);">Patient Information</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${demographics.name || 'Not specified'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9em;">Age: ${demographics.age || 'N/A'} | Gender: ${demographics.gender || 'N/A'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9em;">DOB: ${demographics.date_of_birth || 'N/A'}</p>
+                </div>
+                
+                <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--risk-medium);">
+                    <strong style="color: var(--risk-medium);">Chief Complaint</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${summary.chief_complaint || 'Not specified'}</p>
+                </div>
+                
+                <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--risk-high);">
+                    <strong style="color: var(--risk-high);">Diagnosis</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${summary.diagnosis || 'Not specified'}</p>
+                </div>
+                
+                <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--accent-purple);">
+                    <strong style="color: var(--accent-purple);">Vital Signs</strong>
+                    <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.9em;">
+                        <p style="margin: 0; color: var(--text-muted);">Temp: <span style="color: var(--text-primary);">${vitals.temperature || 'N/A'}</span></p>
+                        <p style="margin: 0; color: var(--text-muted);">BP: <span style="color: var(--text-primary);">${vitals.blood_pressure || 'N/A'}</span></p>
+                        <p style="margin: 0; color: var(--text-muted);">HR: <span style="color: var(--text-primary);">${vitals.heart_rate || 'N/A'}</span></p>
+                        <p style="margin: 0; color: var(--text-muted);">O2: <span style="color: var(--text-primary);">${vitals.oxygen_saturation || 'N/A'}</span></p>
+                        <p style="margin: 0; color: var(--text-muted);">RR: <span style="color: var(--text-primary);">${vitals.respiratory_rate || 'N/A'}</span></p>
+                    </div>
+                </div>
+                
+                <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--risk-low);">
+                    <strong style="color: var(--risk-low);">Medications</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${medications.length > 0 ? medications.join(', ') : 'None listed'}</p>
+                </div>
+                
+                <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--risk-high);">
+                    <strong style="color: var(--risk-high);">Allergies</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${allergies.length > 0 ? allergies.join(', ') : 'None listed'}</p>
+                </div>
+                
+                ${summary.additional_notes ? `
+                <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--text-muted);">
+                    <strong style="color: var(--text-muted);">Additional Notes</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary); font-size: 0.9em;">${summary.additional_notes}</p>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+
 
 // ═══════════════════════════════════════════════════
 // HISTORY

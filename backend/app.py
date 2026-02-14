@@ -3,10 +3,11 @@ Medical Triage Flask API Server
 ================================
 Serves the trained ML model for patient risk classification.
 Endpoints:
-  POST /api/predict     - Classify patient risk + department recommendation
-  POST /api/upload-ehr  - Parse uploaded health document
-  GET  /api/stats       - Dataset statistics for dashboard
-  GET  /api/model-info  - Model metadata and accuracy
+  POST /api/predict        - Classify patient risk + department recommendation
+  POST /api/upload-ehr     - Parse uploaded health document
+  POST /api/summarize-ehr  - Summarize EHR PDF using Groq AI (Llama 3)
+  GET  /api/stats          - Dataset statistics for dashboard
+  GET  /api/model-info     - Model metadata and accuracy
 """
 
 import os
@@ -16,6 +17,13 @@ import pandas as pd
 import joblib
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# PDF Module for EHR Processing
+from services.pdf_module import extract_text_from_pdf, summarize_ehr_text
 
 # --- App Setup ---
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
@@ -403,6 +411,43 @@ def extract_from_text(text):
             extracted[field] = float(val) if '.' in val else int(val)
 
     return extracted
+
+
+@app.route('/api/summarize-ehr', methods=['POST'])
+def summarize_ehr():
+    """Summarize EHR PDF using Groq AI (Llama 3) to extract structured medical information."""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+
+        file = request.files['file']
+        filename = file.filename.lower()
+
+        if not filename.endswith('.pdf'):
+            return jsonify({'error': 'Only PDF files are supported'}), 400
+
+        try:
+            text = extract_text_from_pdf(file)
+        except Exception as e:
+            return jsonify({'error': f'PDF extraction failed: {str(e)}'}), 500
+
+        if not text or len(text.strip()) < 10:
+            return jsonify({'error': 'No text could be extracted from PDF'}), 400
+
+        try:
+            summary = summarize_ehr_text(text)
+        except Exception as e:
+            return jsonify({'error': f'Summarization failed: {str(e)}'}), 500
+
+        return jsonify({
+            'success': True,
+            'summary': summary,
+            'raw_text_length': len(text),
+            'filename': file.filename
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/stats', methods=['GET'])
