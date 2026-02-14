@@ -1,0 +1,53 @@
+{
+  "feature_columns": [
+    "age",
+    "heart_rate",
+    "systolic_blood_pressure",
+    "oxygen_saturation",
+    "body_temperature",
+    "pain_level",
+    "chronic_disease_count",
+    "previous_er_visits",
+    "age_hr_interaction",
+    "bp_o2_ratio",
+    "temp_deviation",
+    "vitals_severity",
+    "chronic_er_score",
+    "age_risk",
+    "combined_risk_score",
+    "arrival_ambulance",
+    "arrival_walk_in",
+    "arrival_wheelchair"
+  ],
+  "risk_labels": {
+    "0": "Low",
+    "1": "Medium",
+    "2": "High"
+  },
+  "accuracy": 0.9530555555555555,
+  "cv_accuracy_mean": 0.9452777777777778,
+  "cv_accuracy_std": 0.002224391302506507,
+  "feature_importances": {
+    "pain_level": 0.5194837685500042,
+    "vitals_severity": 0.26102685702077044,
+    "combined_risk_score": 0.10701856184019895,
+    "body_temperature": 0.032352794045335934,
+    "age_hr_interaction": 0.020333209131566332,
+    "bp_o2_ratio": 0.009337870323517811,
+    "chronic_er_score": 0.008917756795046224,
+    "age": 0.008851700645879262,
+    "heart_rate": 0.007314619142247807,
+    "systolic_blood_pressure": 0.007278672032428909,
+    "oxygen_saturation": 0.005248399290105385,
+    "temp_deviation": 0.004494303766416302,
+    "previous_er_visits": 0.0034792614259101552,
+    "arrival_walk_in": 0.002520950615869548,
+    "chronic_disease_count": 0.0011263526959649677,
+    "arrival_ambulance": 0.0007943773367118144,
+    "arrival_wheelchair": 0.00036163065358766147,
+    "age_risk": 5.89146884382555e-05
+  },
+  "training_samples": 14400,
+  "test_samples": 3600,
+  "model_type": "VotingClassifier(GradientBoosting + RandomForest)"
+}

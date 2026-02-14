@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedTriage AI - Intelligent Medical Triage System</title>
+    <meta name="description" content="AI-powered medical triage system for patient risk classification, department recommendation, and clinical decision support.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">MedTriage</span>
+                    <span class="logo-subtitle">AI System</span>
+                </div>
+            </div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="nav-link active" data-section="dashboard" id="nav-dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>Dashboard</span>
+            </a></li>
+            <li><a href="#" class="nav-link" data-section="assessment" id="nav-assessment">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                <span>Patient Assessment</span>
+            </a></li>
+            <li><a href="#" class="nav-link" data-section="analytics" id="nav-analytics">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>Analytics</span>
+            </a></li>
+            <li><a href="#" class="nav-link" data-section="history" id="nav-history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>History</span>
+            </a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="model-badge">
+                <div class="model-status"></div>
+                <span>AI Model Active</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <button class="menu-toggle" id="menuToggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="logo-text">
+            <span class="logo-title">MedTriage AI</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section class="section active" id="section-dashboard">
+            <div class="section-header">
+                <div>
+                    <h1>Dashboard Overview</h1>
+                    <p class="section-subtitle">Real-time medical triage insights and statistics</p>
+                </div>
+                <div class="header-badge">
+                    <span class="accuracy-badge" id="accuracyBadge">Model: Loading...</span>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card stat-card-total">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="totalPatients">--</span>
+                        <span class="stat-label">Total Records</span>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-low">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="lowCount">--</span>
+                        <span class="stat-label">Low Risk</span>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-medium">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="mediumCount">--</span>
+                        <span class="stat-label">Medium Risk</span>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-high">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="highCount">--</span>
+                        <span class="stat-label">High Risk</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Risk Distribution</h3>
+                    <div class="chart-container" id="riskDistChart"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Arrival Mode Distribution</h3>
+                    <div class="chart-container" id="arrivalChart"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Feature Importance</h3>
+                    <div class="chart-container" id="featureChart"></div>
+                </div>
+            </div>
+
+            <!-- Vitals Overview -->
+            <div class="vitals-overview">
+                <h3>Dataset Vitals Overview</h3>
+                <div class="vitals-grid" id="vitalsGrid"></div>
+            </div>
+        </section>
+
+        <!-- Patient Assessment Section -->
+        <section class="section" id="section-assessment">
+            <div class="section-header">
+                <div>
+                    <h1>Patient Assessment</h1>
+                    <p class="section-subtitle">Enter patient data for AI-powered risk classification</p>
+                </div>
+            </div>
+
+            <div class="assessment-layout">
+                <!-- Input Form -->
+                <div class="form-card">
+                    <div class="form-header">
+                        <h3>Patient Information</h3>
+                        <div class="form-actions">
+                            <button class="btn btn-outline" id="uploadEhrBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                Upload EHR/EMR
+                            </button>
+                            <input type="file" id="ehrFileInput" accept=".pdf,.txt,.json,.csv" style="display:none">
+                            <button class="btn btn-outline" id="sampleDataBtn">Load Sample</button>
+                        </div>
+                    </div>
+
+                    <!-- Upload Status -->
+                    <div class="upload-status" id="uploadStatus" style="display:none">
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        </div>
+                        <div class="upload-info">
+                            <span class="upload-filename" id="uploadFilename"></span>
+                            <span class="upload-msg" id="uploadMsg"></span>
+                        </div>
+                    </div>
+
+                    <form id="patientForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="age">Age (years)</label>
+                                <input type="number" id="age" name="age" min="0" max="120" step="0.1" required placeholder="e.g. 45">
+                            </div>
+                            <div class="form-group">
+                                <label for="gender">Gender</label>
+                                <select id="gender" name="gender">
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="heart_rate">Heart Rate (bpm)</label>
+                                <input type="number" id="heart_rate" name="heart_rate" min="30" max="220" step="0.1" required placeholder="60-100 normal">
+                            </div>
+                            <div class="form-group">
+                                <label for="systolic_blood_pressure">Systolic BP (mmHg)</label>
+                                <input type="number" id="systolic_blood_pressure" name="systolic_blood_pressure" min="60" max="250" step="0.1" required placeholder="90-120 normal">
+                            </div>
+                            <div class="form-group">
+                                <label for="oxygen_saturation">O2 Saturation (%)</label>
+                                <input type="number" id="oxygen_saturation" name="oxygen_saturation" min="50" max="100" step="0.1" required placeholder="95-100 normal">
+                            </div>
+                            <div class="form-group">
+                                <label for="body_temperature">Temperature (C)</label>
+                                <input type="number" id="body_temperature" name="body_temperature" min="34" max="42" step="0.01" required placeholder="36.1-37.2 normal">
+                            </div>
+                            <div class="form-group">
+                                <label for="pain_level">Pain Level (1-10)</label>
+                                <input type="range" id="pain_level" name="pain_level" min="1" max="10" value="3">
+                                <div class="range-labels">
+                                    <span>1 - Mild</span>
+                                    <span class="pain-value" id="painValue">3</span>
+                                    <span>10 - Severe</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="chronic_disease_count">Chronic Diseases</label>
+                                <input type="number" id="chronic_disease_count" name="chronic_disease_count" min="0" max="10" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="previous_er_visits">Previous ER Visits</label>
+                                <input type="number" id="previous_er_visits" name="previous_er_visits" min="0" max="20" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="arrival_mode">Arrival Mode</label>
+                                <select id="arrival_mode" name="arrival_mode" required>
+                                    <option value="walk_in">Walk-in</option>
+                                    <option value="wheelchair">Wheelchair</option>
+                                    <option value="ambulance">Ambulance</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="symptoms">Symptoms / Notes</label>
+                                <textarea id="symptoms" name="symptoms" rows="2" placeholder="Describe symptoms (optional)..."></textarea>
+                            </div>
+                        </div>
+                        <div class="form-footer">
+                            <button type="button" class="btn btn-outline" id="resetBtn">Reset</button>
+                            <button type="submit" class="btn btn-primary" id="assessBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                                Run AI Assessment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="results-panel" id="resultsPanel">
+                    <div class="results-placeholder" id="resultsPlaceholder">
+                        <div class="placeholder-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        </div>
+                        <h3>Awaiting Patient Data</h3>
+                        <p>Fill in patient information and click "Run AI Assessment" to get risk classification, department recommendations, and explainable insights.</p>
+                    </div>
+
+                    <div class="results-content" id="resultsContent" style="display:none">
+                        <!-- Risk Gauge -->
+                        <div class="risk-gauge-card" id="riskGaugeCard">
+                            <h3>Risk Classification</h3>
+                            <div class="gauge-container">
+                                <div class="gauge" id="riskGauge">
+                                    <div class="gauge-fill" id="gaugeFill"></div>
+                                    <div class="gauge-center">
+                                        <span class="gauge-value" id="gaugeValue">--</span>
+                                        <span class="gauge-label" id="gaugeLabel">Risk Level</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="confidence-bars" id="confidenceBars"></div>
+                        </div>
+
+                        <!-- Department Recommendation -->
+                        <div class="dept-card">
+                            <h3>Department Recommendation</h3>
+                            <div class="dept-list" id="deptList"></div>
+                        </div>
+
+                        <!-- Explainability -->
+                        <div class="explain-card">
+                            <h3>Contributing Factors</h3>
+                            <p class="explain-subtitle">Key factors influencing the risk classification</p>
+                            <div class="contributions-list" id="contributionsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section class="section" id="section-analytics">
+            <div class="section-header">
+                <div>
+                    <h1>Analytics & Insights</h1>
+                    <p class="section-subtitle">Deep dive into dataset patterns and model performance</p>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="chart-card large">
+                    <h3>Model Performance</h3>
+                    <div class="model-stats" id="modelStats"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Age Distribution by Risk</h3>
+                    <div class="chart-container" id="ageRiskChart"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Vitals Correlation</h3>
+                    <div class="chart-container" id="vitalsCorrelation"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section class="section" id="section-history">
+            <div class="section-header">
+                <div>
+                    <h1>Assessment History</h1>
+                    <p class="section-subtitle">Previous patient assessments during this session</p>
+                </div>
+                <button class="btn btn-outline" id="clearHistoryBtn">Clear History</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <p>No assessments yet. Go to Patient Assessment to start.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display:none">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <p>Analyzing patient data...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
