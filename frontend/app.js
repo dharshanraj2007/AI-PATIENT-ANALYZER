@@ -524,8 +524,22 @@ function initForm() {
         document.getElementById('uploadStatus').style.display = 'none';
     });
 
-    // Sample data
-    sampleBtn.addEventListener('click', loadSampleData);
+    // ABHA Search Button
+    const abhaSearchBtn = document.getElementById('abhaSearchBtn');
+    if (abhaSearchBtn) {
+        abhaSearchBtn.addEventListener('click', () => {
+            const abhaInput = document.getElementById('abhaIdInput');
+            const abhaId = abhaInput ? abhaInput.value.trim() : '';
+
+            if (!abhaId) {
+                alert('⚠️ Please enter an ABHA ID');
+                return;
+            }
+
+            alert('🔍 ABHA Fetch Feature Coming Soon!\n\nABHA ID: ' + abhaId + '\n\nThis feature will auto-populate patient data from ABHA database.');
+        });
+    }
+
 
     // Clear history
     if (clearHistoryBtn) {

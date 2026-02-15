@@ -1,0 +1,68 @@
+/* ABHA ID Search Input */
+.abha-search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+    max-width: 300px;
+}
+
+.abha-input {
+    flex: 1;
+    padding: 11px 50px 11px 14px;
+    background: var(--bg-input);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+    outline: none;
+}
+
+.abha-input:hover {
+    border-color: rgba(59, 130, 246, 0.25);
+    background: #fff;
+}
+
+.abha-input:focus {
+    border-color: var(--accent-blue);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--accent-blue-glow), var(--shadow-sm);
+}
+
+.abha-input::placeholder {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.abha-search-btn {
+    position: absolute;
+    right: 6px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    transition: all var(--transition-fast);
+    color: white;
+    box-shadow: 0 2px 8px var(--accent-blue-glow);
+}
+
+.abha-search-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--accent-blue-glow);
+}
+
+.abha-search-btn:active {
+    transform: translateY(0);
+}
+
+.abha-search-btn svg {
+    width: 18px;
+    height: 18px;
+}
