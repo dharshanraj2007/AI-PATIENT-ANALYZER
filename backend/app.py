@@ -1,475 +1,390 @@
 """
-Medical Triage Flask API Server
-================================
-Serves the trained ML model for patient risk classification.
-Endpoints:
-  POST /api/predict        - Classify patient risk + department recommendation
-  POST /api/upload-ehr     - Parse uploaded health document
-  POST /api/summarize-ehr  - Summarize EHR PDF using Groq AI (Llama 3)
-  GET  /api/stats          - Dataset statistics for dashboard
-  GET  /api/model-info     - Model metadata and accuracy
+MedTriage Flask API Server
+===========================
+Serves the frontend and provides prediction + stats endpoints.
+Works with the GradientBoosting + RandomForest ensemble model.
+Uses Groq AI (Llama 3) for real-time EHR summarization.
 """
-
 import os
-import json
-import numpy as np
-import pandas as pd
-import joblib
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
+# ── Load .env BEFORE anything else ───────────────────────────────────────────
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-
-# PDF Module for EHR Processing
-from services.pdf_module import extract_text_from_pdf, summarize_ehr_text
-
-# --- App Setup ---
-app = Flask(__name__, static_folder='../frontend', static_url_path='')
-CORS(app)
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, 'models')
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-# --- Load Model Artifacts ---
-print("Loading model artifacts...")
-model = joblib.load(os.path.join(MODEL_DIR, 'triage_model.pkl'))
-scaler = joblib.load(os.path.join(MODEL_DIR, 'scaler.pkl'))
+import json
+import tempfile
+import re
+import joblib
+import numpy as np
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 
-with open(os.path.join(MODEL_DIR, 'model_meta.json'), 'r') as f:
+# ── Paths ────────────────────────────────────────────────────────────────────
+sys.path.insert(0, BASE_DIR)
+FRONTEND_DIR = os.path.join(os.path.dirname(BASE_DIR), "FRONTEND")
+MODEL_DIR = os.path.join(BASE_DIR, "models")
+
+# ── Groq AI Summarizer ───────────────────────────────────────────────────────
+from services.pdf_module import extract_text_from_pdf, GROQ_AVAILABLE
+if GROQ_AVAILABLE:
+    from services.pdf_module import summarize_ehr_text
+    print("[OK] Groq AI summarizer loaded")
+else:
+    summarize_ehr_text = None
+    print("[WARN] Groq not available - using rule-based EHR extraction")
+
+# ── Load model artifacts once ────────────────────────────────────────────────
+model = joblib.load(os.path.join(MODEL_DIR, "triage_model.pkl"))
+scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
+
+with open(os.path.join(MODEL_DIR, "model_meta.json")) as f:
     model_meta = json.load(f)
 
-with open(os.path.join(MODEL_DIR, 'dataset_stats.json'), 'r') as f:
+with open(os.path.join(MODEL_DIR, "dataset_stats.json")) as f:
     dataset_stats = json.load(f)
 
-FEATURE_COLS = model_meta['feature_columns']
-RISK_LABELS = {0: 'Low', 1: 'Medium', 2: 'High'}
-RISK_COLORS = {'Low': '#10b981', 'Medium': '#f59e0b', 'High': '#ef4444'}
-
-print(f"Model loaded: {model_meta['model_type']}")
-print(f"Accuracy: {model_meta['accuracy']*100:.2f}%")
+FEATURE_COLS = model_meta["feature_columns"]
+RISK_LABELS = {int(k): v for k, v in model_meta["risk_labels"].items()}
+RISK_COLORS = {"Low": "#10b981", "Medium": "#f59e0b", "High": "#ef4444"}
 
 
-def compute_engineered_features(data):
-    """Compute the same engineered features used during training."""
-    age = data.get('age', 40)
-    heart_rate = data.get('heart_rate', 80)
-    sbp = data.get('systolic_blood_pressure', 120)
-    o2 = data.get('oxygen_saturation', 98)
-    temp = data.get('body_temperature', 37.0)
-    pain = data.get('pain_level', 3)
-    chronic = data.get('chronic_disease_count', 0)
-    er_visits = data.get('previous_er_visits', 0)
-    arrival = data.get('arrival_mode', 'walk_in')
-
-    temp_deviation = abs(temp - 37.0)
-    age_hr_interaction = age * heart_rate / 100
-    bp_o2_ratio = sbp / (o2 + 1)
-
-    vitals_severity = (
-        (heart_rate / 80) * 0.25 +
-        (sbp / 120) * 0.2 +
-        ((100 - o2) / 10) * 0.25 +
-        (temp_deviation / 2) * 0.15 +
-        (pain / 10) * 0.15
-    )
-
-    chronic_er_score = chronic * 0.6 + er_visits * 0.4
-    age_risk = 1.5 if age > 65 else (1.3 if age < 5 else 1.0)
-    combined_risk_score = vitals_severity * age_risk * (1 + chronic_er_score / 10)
-
-    # One-hot encode arrival_mode
-    arrival_ambulance = 1 if arrival == 'ambulance' else 0
-    arrival_walk_in = 1 if arrival == 'walk_in' else 0
-    arrival_wheelchair = 1 if arrival == 'wheelchair' else 0
-
-    feature_values = [
-        age, heart_rate, sbp, o2, temp, pain, chronic, er_visits,
-        age_hr_interaction, bp_o2_ratio, temp_deviation, vitals_severity,
-        chronic_er_score, age_risk, combined_risk_score,
-        arrival_ambulance, arrival_walk_in, arrival_wheelchair
-    ]
-
-    return feature_values
-
-
-def recommend_department(risk_level, data):
-    """Rule-based department recommendation based on risk + vitals."""
-    o2 = data.get('oxygen_saturation', 98)
-    hr = data.get('heart_rate', 80)
-    sbp = data.get('systolic_blood_pressure', 120)
-    temp = data.get('body_temperature', 37.0)
-    pain = data.get('pain_level', 3)
-    age = data.get('age', 40)
-    chronic = data.get('chronic_disease_count', 0)
-
+# ── Department Mapping ───────────────────────────────────────────────────────
+def get_departments(risk_level, data):
+    """Return department recommendations based on risk + vitals."""
     departments = []
 
-    if risk_level == 'High':
-        if o2 < 90:
-            departments.append({
-                'name': 'Emergency / ICU',
-                'icon': 'emergency',
-                'reason': f'Critical oxygen saturation ({o2}%)',
-                'urgency': 'IMMEDIATE'
-            })
-        if hr > 120 or sbp > 160:
-            departments.append({
-                'name': 'Cardiology',
-                'icon': 'cardiology',
-                'reason': f'Elevated heart rate ({hr} bpm) / BP ({sbp} mmHg)',
-                'urgency': 'URGENT'
-            })
-        if temp > 38.5:
-            departments.append({
-                'name': 'Infectious Disease',
-                'icon': 'infectious',
-                'reason': f'High fever ({temp}C)',
-                'urgency': 'URGENT'
-            })
-        if not departments:
-            departments.append({
-                'name': 'Emergency Medicine',
-                'icon': 'emergency',
-                'reason': 'High overall risk score',
-                'urgency': 'URGENT'
-            })
-
-    elif risk_level == 'Medium':
-        if pain >= 7:
-            departments.append({
-                'name': 'Pain Management / Surgery',
-                'icon': 'surgery',
-                'reason': f'Severe pain level ({pain}/10)',
-                'urgency': 'SOON'
-            })
-        if age > 60 and chronic >= 2:
-            departments.append({
-                'name': 'Internal Medicine',
-                'icon': 'internal',
-                'reason': f'Elderly ({age}y) with {chronic} chronic conditions',
-                'urgency': 'SOON'
-            })
-        if hr > 100:
-            departments.append({
-                'name': 'Cardiology',
-                'icon': 'cardiology',
-                'reason': f'Tachycardia ({hr} bpm)',
-                'urgency': 'MODERATE'
-            })
-        if temp > 38.0:
-            departments.append({
-                'name': 'General Medicine',
-                'icon': 'general',
-                'reason': f'Moderate fever ({temp}C)',
-                'urgency': 'MODERATE'
-            })
-        if not departments:
-            departments.append({
-                'name': 'General Medicine',
-                'icon': 'general',
-                'reason': 'Moderate risk - requires monitoring',
-                'urgency': 'MODERATE'
-            })
-
-    else:  # Low
+    if risk_level == "High":
         departments.append({
-            'name': 'General Medicine / Outpatient',
-            'icon': 'outpatient',
-            'reason': 'Stable condition - routine evaluation',
-            'urgency': 'NON-URGENT'
+            "name": "Emergency Department",
+            "reason": "High-risk vitals require immediate medical attention",
+            "urgency": "IMMEDIATE",
+            "icon": "emergency"
+        })
+    if data.get("heart_rate", 0) > 100 or data.get("systolic_blood_pressure", 0) > 160:
+        departments.append({
+            "name": "Cardiology",
+            "reason": "Elevated heart rate or blood pressure detected",
+            "urgency": "URGENT" if risk_level == "High" else "SOON",
+            "icon": "cardiology"
+        })
+    if data.get("body_temperature", 37) > 38.0:
+        departments.append({
+            "name": "Infectious Disease",
+            "reason": "Elevated body temperature indicates possible infection",
+            "urgency": "URGENT" if risk_level == "High" else "SOON",
+            "icon": "infectious"
+        })
+    if data.get("oxygen_saturation", 100) < 92:
+        departments.append({
+            "name": "Pulmonology",
+            "reason": "Low oxygen saturation needs respiratory evaluation",
+            "urgency": "IMMEDIATE",
+            "icon": "emergency"
+        })
+    if risk_level == "Medium":
+        departments.append({
+            "name": "Internal Medicine",
+            "reason": "Moderate risk -- needs further evaluation",
+            "urgency": "SOON",
+            "icon": "internal"
+        })
+    if risk_level == "Low":
+        departments.append({
+            "name": "General Practice",
+            "reason": "Low-risk -- routine evaluation recommended",
+            "urgency": "NON-URGENT",
+            "icon": "general"
+        })
+
+    if not departments:
+        departments.append({
+            "name": "General Practice",
+            "reason": "Standard medical assessment",
+            "urgency": "NON-URGENT",
+            "icon": "general"
         })
 
     return departments
 
 
-def compute_feature_contributions(data, prediction_idx):
-    """Compute approximate feature contributions using feature importances."""
-    importances = model_meta.get('feature_importances', {})
-    raw_feature_names = [
-        'age', 'heart_rate', 'systolic_blood_pressure', 'oxygen_saturation',
-        'body_temperature', 'pain_level', 'chronic_disease_count',
-        'previous_er_visits', 'arrival_mode'
+# ── Feature Engineering (must match training) ────────────────────────────────
+def build_features(data):
+    """Build the 18-feature vector matching the training pipeline."""
+    age = float(data["age"])
+    hr = float(data["heart_rate"])
+    sbp = float(data["systolic_blood_pressure"])
+    o2 = float(data["oxygen_saturation"])
+    temp = float(data["body_temperature"])
+    pain = float(data["pain_level"])
+    chronic = float(data["chronic_disease_count"])
+    er_visits = float(data["previous_er_visits"])
+    arrival = data["arrival_mode"]
+
+    # Engineered features (must match train_model.py exactly)
+    age_hr_interaction = age * hr / 100
+    bp_o2_ratio = sbp / (o2 + 1)
+    temp_deviation = abs(temp - 37.0)
+    vitals_severity = (
+        (hr / 80) * 0.25 +
+        (sbp / 120) * 0.2 +
+        ((100 - o2) / 10) * 0.25 +
+        (temp_deviation / 2) * 0.15 +
+        (pain / 10) * 0.15
+    )
+    chronic_er_score = chronic * 0.6 + er_visits * 0.4
+    age_risk = 1.5 if age > 65 else (1.3 if age < 5 else 1.0)
+    combined_risk_score = vitals_severity * age_risk * (1 + chronic_er_score / 10)
+
+    # Arrival mode one-hot (same order as training)
+    arrival_ambulance = 1 if arrival == "ambulance" else 0
+    arrival_walk_in = 1 if arrival == "walk_in" else 0
+    arrival_wheelchair = 1 if arrival == "wheelchair" else 0
+
+    features = [
+        age, hr, sbp, o2, temp, pain, chronic, er_visits,
+        age_hr_interaction, bp_o2_ratio, temp_deviation, vitals_severity,
+        chronic_er_score, age_risk, combined_risk_score,
+        arrival_ambulance, arrival_walk_in, arrival_wheelchair
     ]
-    display_names = {
-        'age': 'Age',
-        'heart_rate': 'Heart Rate',
-        'systolic_blood_pressure': 'Blood Pressure',
-        'oxygen_saturation': 'O2 Saturation',
-        'body_temperature': 'Temperature',
-        'pain_level': 'Pain Level',
-        'chronic_disease_count': 'Chronic Diseases',
-        'previous_er_visits': 'Previous ER Visits',
-        'arrival_mode': 'Arrival Mode'
-    }
-
-    # Aggregate importances from engineered features back to original
-    aggregated = {}
-    for feat_name, imp_val in importances.items():
-        if feat_name in ['age', 'age_hr_interaction', 'age_risk']:
-            aggregated['age'] = aggregated.get('age', 0) + imp_val
-        elif feat_name in ['heart_rate']:
-            aggregated['heart_rate'] = aggregated.get('heart_rate', 0) + imp_val
-        elif feat_name in ['systolic_blood_pressure', 'bp_o2_ratio']:
-            aggregated['systolic_blood_pressure'] = aggregated.get('systolic_blood_pressure', 0) + imp_val
-        elif feat_name in ['oxygen_saturation']:
-            aggregated['oxygen_saturation'] = aggregated.get('oxygen_saturation', 0) + imp_val
-        elif feat_name in ['body_temperature', 'temp_deviation']:
-            aggregated['body_temperature'] = aggregated.get('body_temperature', 0) + imp_val
-        elif feat_name in ['pain_level']:
-            aggregated['pain_level'] = aggregated.get('pain_level', 0) + imp_val
-        elif feat_name in ['chronic_disease_count', 'chronic_er_score']:
-            aggregated['chronic_disease_count'] = aggregated.get('chronic_disease_count', 0) + imp_val
-        elif feat_name in ['previous_er_visits']:
-            aggregated['previous_er_visits'] = aggregated.get('previous_er_visits', 0) + imp_val
-        elif feat_name.startswith('arrival_'):
-            aggregated['arrival_mode'] = aggregated.get('arrival_mode', 0) + imp_val
-        elif feat_name in ['vitals_severity', 'combined_risk_score']:
-            # Distribute composite scores across vitals
-            aggregated['heart_rate'] = aggregated.get('heart_rate', 0) + imp_val * 0.25
-            aggregated['systolic_blood_pressure'] = aggregated.get('systolic_blood_pressure', 0) + imp_val * 0.2
-            aggregated['oxygen_saturation'] = aggregated.get('oxygen_saturation', 0) + imp_val * 0.25
-            aggregated['body_temperature'] = aggregated.get('body_temperature', 0) + imp_val * 0.15
-            aggregated['pain_level'] = aggregated.get('pain_level', 0) + imp_val * 0.15
-
-    # Normalize
-    total = sum(aggregated.values()) if aggregated else 1
-    contributions = []
-    for feat_name in raw_feature_names:
-        val = aggregated.get(feat_name, 0)
-        contributions.append({
-            'feature': display_names.get(feat_name, feat_name),
-            'importance': round(val / total * 100, 1),
-            'value': data.get(feat_name, 'N/A')
-        })
-
-    contributions.sort(key=lambda x: x['importance'], reverse=True)
-    return contributions
+    return np.array(features).reshape(1, -1)
 
 
-# --- API Routes ---
+# ── Queue Blueprint ──────────────────────────────────────────────────────────
+from routes.queue_routes import queue_bp, queue_manager
 
-@app.route('/')
-def serve_frontend():
-    return send_from_directory(app.static_folder, 'index.html')
-
-
-@app.route('/api/predict', methods=['POST'])
-def predict():
-    """Predict patient risk level and recommend department."""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
-
-        # Compute features
-        features = compute_engineered_features(data)
-        features_array = np.array([features])
-        features_scaled = scaler.transform(features_array)
-
-        # Predict
-        prediction = model.predict(features_scaled)[0]
-        probabilities = model.predict_proba(features_scaled)[0]
-
-        risk_level = RISK_LABELS[prediction]
-        confidence = float(np.max(probabilities))
-
-        # Department recommendation
-        departments = recommend_department(risk_level, data)
-
-        # Feature contributions
-        contributions = compute_feature_contributions(data, prediction)
-
-        # Confidence scores per class
-        confidence_scores = {
-            RISK_LABELS[i]: round(float(probabilities[i]) * 100, 1)
-            for i in range(len(probabilities))
-        }
-
-        return jsonify({
-            'risk_level': risk_level,
-            'risk_color': RISK_COLORS[risk_level],
-            'confidence': round(confidence * 100, 1),
-            'confidence_scores': confidence_scores,
-            'departments': departments,
-            'contributions': contributions,
-            'patient_data': data
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# ── Flask App ────────────────────────────────────────────────────────────────
+app = Flask(__name__)
+CORS(app)
+app.register_blueprint(queue_bp)
 
 
-@app.route('/api/upload-ehr', methods=['POST'])
-def upload_ehr():
-    """Parse uploaded EHR/EMR document and extract patient data."""
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file uploaded'}), 400
-
-        file = request.files['file']
-        filename = file.filename.lower()
-        content = ''
-
-        if filename.endswith('.txt'):
-            content = file.read().decode('utf-8', errors='replace')
-        elif filename.endswith('.json'):
-            content = file.read().decode('utf-8', errors='replace')
-            try:
-                data = json.loads(content)
-                # Map common field names
-                mapped = {}
-                field_mapping = {
-                    'age': ['age', 'patient_age', 'Age'],
-                    'heart_rate': ['heart_rate', 'heartrate', 'hr', 'Heart_Rate', 'pulse'],
-                    'systolic_blood_pressure': ['systolic_blood_pressure', 'sbp', 'systolic', 'Blood_Pressure', 'bp'],
-                    'oxygen_saturation': ['oxygen_saturation', 'o2_sat', 'spo2', 'o2'],
-                    'body_temperature': ['body_temperature', 'temperature', 'temp', 'Temperature'],
-                    'pain_level': ['pain_level', 'pain', 'pain_score'],
-                    'chronic_disease_count': ['chronic_disease_count', 'chronic_diseases', 'pre_existing_conditions'],
-                    'previous_er_visits': ['previous_er_visits', 'er_visits', 'prev_visits'],
-                    'arrival_mode': ['arrival_mode', 'arrival', 'transport'],
-                    'gender': ['gender', 'sex', 'Gender'],
-                    'patient_id': ['patient_id', 'Patient_ID', 'id'],
-                    'symptoms': ['symptoms', 'Symptoms', 'chief_complaint']
-                }
-                for target, sources in field_mapping.items():
-                    for src in sources:
-                        if src in data:
-                            mapped[target] = data[src]
-                            break
-
-                return jsonify({
-                    'success': True,
-                    'format': 'json',
-                    'extracted_data': mapped,
-                    'raw_fields': list(data.keys())
-                })
-            except json.JSONDecodeError:
-                pass
-
-        elif filename.endswith('.pdf'):
-            try:
-                from PyPDF2 import PdfReader
-                reader = PdfReader(file)
-                content = ''
-                for page in reader.pages:
-                    content += page.extract_text() or ''
-            except Exception:
-                content = 'Could not parse PDF'
-
-        elif filename.endswith('.csv'):
-            content = file.read().decode('utf-8', errors='replace')
-            try:
-                import io
-                csv_df = pd.read_csv(io.StringIO(content))
-                if len(csv_df) > 0:
-                    row = csv_df.iloc[0].to_dict()
-                    return jsonify({
-                        'success': True,
-                        'format': 'csv',
-                        'extracted_data': row,
-                        'raw_fields': list(csv_df.columns),
-                        'total_records': len(csv_df)
-                    })
-            except Exception:
-                pass
-
-        # For text-based parsing, extract numeric values
-        extracted = extract_from_text(content)
-
-        return jsonify({
-            'success': True,
-            'format': 'text',
-            'extracted_data': extracted,
-            'raw_content': content[:500]
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+@app.route("/")
+def serve_index():
+    return send_from_directory(FRONTEND_DIR, "index.html")
 
 
-def extract_from_text(text):
-    """Extract patient data from free text."""
-    import re
-    extracted = {}
-
-    patterns = {
-        'age': r'(?:age|years?\s*old)\s*[:\-]?\s*(\d+)',
-        'heart_rate': r'(?:heart\s*rate|hr|pulse)\s*[:\-]?\s*(\d+)',
-        'systolic_blood_pressure': r'(?:systolic|sbp|blood\s*pressure|bp)\s*[:\-]?\s*(\d+)',
-        'oxygen_saturation': r'(?:o2\s*sat|spo2|oxygen)\s*[:\-]?\s*(\d+\.?\d*)',
-        'body_temperature': r'(?:temp|temperature)\s*[:\-]?\s*(\d+\.?\d*)',
-        'pain_level': r'(?:pain|pain\s*level|pain\s*score)\s*[:\-]?\s*(\d+)',
-    }
-
-    for field, pattern in patterns.items():
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            val = match.group(1)
-            extracted[field] = float(val) if '.' in val else int(val)
-
-    return extracted
+@app.route("/<path:filename>")
+def serve_static(filename):
+    return send_from_directory(FRONTEND_DIR, filename)
 
 
-@app.route('/api/summarize-ehr', methods=['POST'])
-def summarize_ehr():
-    """Summarize EHR PDF using Groq AI (Llama 3) to extract structured medical information."""
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file uploaded'}), 400
-
-        file = request.files['file']
-        filename = file.filename.lower()
-
-        if not filename.endswith('.pdf'):
-            return jsonify({'error': 'Only PDF files are supported'}), 400
-
-        try:
-            text = extract_text_from_pdf(file)
-        except Exception as e:
-            return jsonify({'error': f'PDF extraction failed: {str(e)}'}), 500
-
-        if not text or len(text.strip()) < 10:
-            return jsonify({'error': 'No text could be extracted from PDF'}), 400
-
-        try:
-            summary = summarize_ehr_text(text)
-        except Exception as e:
-            return jsonify({'error': f'Summarization failed: {str(e)}'}), 500
-
-        return jsonify({
-            'success': True,
-            'summary': summary,
-            'raw_text_length': len(text),
-            'filename': file.filename
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/stats', methods=['GET'])
-def get_stats():
-    """Return dataset statistics for the dashboard."""
+@app.route("/api/stats")
+def stats():
+    """Return dataset statistics + model info for the dashboard."""
     return jsonify({
-        **dataset_stats,
-        'model_accuracy': model_meta['accuracy'],
-        'model_type': model_meta['model_type'],
-        'feature_importances': model_meta['feature_importances']
+        "total_records": dataset_stats.get("total_records", 0),
+        "risk_distribution": dataset_stats.get("risk_distribution", {}),
+        "triage_distribution": dataset_stats.get("triage_distribution", {}),
+        "age_stats": dataset_stats.get("age_stats", {}),
+        "heart_rate_stats": dataset_stats.get("heart_rate_stats", {}),
+        "bp_stats": dataset_stats.get("bp_stats", {}),
+        "o2_stats": dataset_stats.get("o2_stats", {}),
+        "temp_stats": dataset_stats.get("temp_stats", {}),
+        "pain_level_stats": dataset_stats.get("pain_level_stats", {}),
+        "arrival_mode_distribution": dataset_stats.get("arrival_mode_distribution", {}),
+        "model_accuracy": model_meta["accuracy"],
+        "feature_importances": model_meta["feature_importances"],
     })
 
 
-@app.route('/api/model-info', methods=['GET'])
-def get_model_info():
-    """Return model metadata."""
-    return jsonify(model_meta)
+@app.route("/api/predict", methods=["POST"])
+def predict():
+    """Predict triage risk level from patient vitals."""
+    try:
+        data = request.get_json()
+
+        # Build feature vector
+        X = build_features(data)
+        X_scaled = scaler.transform(X)
+
+        # Predict
+        prediction = int(model.predict(X_scaled)[0])
+        probabilities = model.predict_proba(X_scaled)[0]
+
+        risk_level = RISK_LABELS[prediction]
+        confidence = round(float(np.max(probabilities)) * 100, 1)
+
+        # Confidence scores for all classes
+        confidence_scores = {}
+        for idx, prob in enumerate(probabilities):
+            label = RISK_LABELS[idx]
+            confidence_scores[label] = round(float(prob) * 100, 1)
+
+        # Feature contributions (top 6 by importance)
+        importances = model_meta.get("feature_importances", {})
+        display_names = {
+            "pain_level": "Pain Level",
+            "vitals_severity": "Vitals Score",
+            "combined_risk_score": "Risk Score",
+            "body_temperature": "Temperature",
+            "age_hr_interaction": "Age x HR",
+            "heart_rate": "Heart Rate",
+            "systolic_blood_pressure": "Blood Pressure",
+            "oxygen_saturation": "O2 Saturation",
+            "age": "Age",
+            "chronic_disease_count": "Chronic Diseases",
+            "previous_er_visits": "ER Visits",
+            "bp_o2_ratio": "BP/O2 Ratio",
+            "temp_deviation": "Temp Deviation",
+            "chronic_er_score": "Chronic Score",
+            "age_risk": "Age Risk",
+            "arrival_ambulance": "Ambulance Arrival",
+            "arrival_walk_in": "Walk-in Arrival",
+            "arrival_wheelchair": "Wheelchair Arrival",
+        }
+
+        contributions = []
+        for feat, imp in sorted(importances.items(), key=lambda x: -x[1])[:6]:
+            name = display_names.get(feat, feat)
+            # Get the actual value
+            if feat in data:
+                value = str(data[feat])
+            elif feat in FEATURE_COLS:
+                idx = FEATURE_COLS.index(feat)
+                value = f"{X[0][idx]:.2f}"
+            else:
+                value = "N/A"
+            contributions.append({
+                "feature": name,
+                "importance": round(float(imp) * 100, 1),
+                "value": value
+            })
+
+        # Departments
+        departments = get_departments(risk_level, data)
+
+        response = {
+            "risk_level": risk_level,
+            "risk_color": RISK_COLORS[risk_level],
+            "confidence": confidence,
+            "confidence_scores": confidence_scores,
+            "departments": departments,
+            "contributions": contributions,
+        }
+
+        # ── Optional: add patient to queue after prediction ──────
+        if data.get("add_to_queue") is True and departments:
+            try:
+                primary_dept = departments[0]["name"]
+                queue_manager.add_patient(primary_dept, {
+                    "patient_id": data.get("patient_id"),
+                    "risk_level": risk_level,
+                    **{k: data[k] for k in (
+                        "age", "heart_rate", "systolic_blood_pressure",
+                        "oxygen_saturation", "body_temperature",
+                        "pain_level", "chronic_disease_count",
+                    ) if k in data},
+                })
+            except Exception:
+                pass  # queue insertion is best-effort; never break prediction
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
-if __name__ == '__main__':
-    print("\n" + "=" * 50)
-    print("  Medical Triage API Server")
-    print("  http://localhost:5000")
+@app.route("/api/summarize-ehr", methods=["POST"])
+def summarize_ehr():
+    """Extract text from uploaded EHR PDF and summarize with Groq AI."""
+    try:
+        pdf_file = request.files.get("file")
+        if not pdf_file:
+            return jsonify({"success": False, "error": "No file uploaded"}), 400
+
+        # Save to temp and extract text with pdfplumber
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            pdf_file.save(tmp.name)
+            text = extract_text_from_pdf(tmp.name)
+        os.unlink(tmp.name)
+
+        if not text:
+            return jsonify({"success": False, "error": "Could not extract text from PDF"})
+
+        # ── Try Groq AI summarization (real-time LLM) ────────────
+        if summarize_ehr_text:
+            try:
+                summary = summarize_ehr_text(text)
+                return jsonify({"success": True, "summary": summary, "method": "groq-ai"})
+            except Exception as groq_err:
+                print(f"[WARN] Groq API failed: {groq_err}, falling back to rule-based")
+
+        # ── Fallback: rule-based regex extraction ────────────────
+        text_lower = text.lower()
+
+        # Age
+        age_match = re.search(r"(\d{1,3})\s*[-]?\s*years?\s*old", text_lower)
+        age = age_match.group(1) + " years" if age_match else None
+
+        # Gender
+        gender = None
+        if "female" in text_lower:
+            gender = "Female"
+        elif "male" in text_lower:
+            gender = "Male"
+
+        # Name
+        name_match = re.search(r"(?:patient|name)\s*[:]\s*([a-zA-Z\s]+)", text, re.IGNORECASE)
+        name = name_match.group(1).strip() if name_match else None
+
+        # Vitals
+        hr_match = re.search(r"(?:heart\s*rate|hr|pulse)\s*[:=]?\s*(\d{2,3})", text_lower)
+        bp_match = re.search(r"(?:blood\s*pressure|bp)\s*[:=]?\s*(\d{2,3})[/]?(\d{2,3})?", text_lower)
+        temp_match = re.search(r"(?:temperature|temp)\s*[:=]?\s*(\d{2,3}\.?\d*)", text_lower)
+        o2_match = re.search(r"(?:oxygen|o2|spo2|saturation)\s*[:=]?\s*(\d{2,3})", text_lower)
+        rr_match = re.search(r"(?:respiratory\s*rate|rr)\s*[:=]?\s*(\d{1,3})", text_lower)
+
+        # Diagnosis
+        diag_match = re.search(r"(?:diagnosis|impression|assessment)\s*[:]\s*(.+?)(?:\n|$)", text, re.IGNORECASE)
+        diagnosis = diag_match.group(1).strip() if diag_match else None
+
+        # Complaint
+        complaint_match = re.search(r"(?:chief\s*complaint|presenting|complains?\s*of)\s*[:]\s*(.+?)(?:\n|$)", text, re.IGNORECASE)
+        chief_complaint = complaint_match.group(1).strip() if complaint_match else None
+
+        # Medications
+        med_match = re.search(r"(?:medications?|meds|prescriptions?)\s*[:]\s*(.+?)(?:\n\n|\n[A-Z]|$)", text, re.IGNORECASE | re.DOTALL)
+        medications = [m.strip() for m in med_match.group(1).split(",") if m.strip()] if med_match else []
+
+        # Allergies
+        allergy_match = re.search(r"(?:allergies|allergy)\s*[:]\s*(.+?)(?:\n|$)", text, re.IGNORECASE)
+        allergies = [a.strip() for a in allergy_match.group(1).split(",") if a.strip()] if allergy_match else []
+
+        summary = {
+            "patient_demographics": {
+                "name": name,
+                "age": age,
+                "gender": gender,
+                "date_of_birth": None,
+            },
+            "chief_complaint": chief_complaint,
+            "diagnosis": diagnosis,
+            "vital_signs": {
+                "heart_rate": f"{hr_match.group(1)} bpm" if hr_match else None,
+                "blood_pressure": f"{bp_match.group(1)}/{bp_match.group(2)} mmHg" if bp_match and bp_match.group(2) else (f"{bp_match.group(1)} mmHg" if bp_match else None),
+                "temperature": f"{temp_match.group(1)} C" if temp_match else None,
+                "oxygen_saturation": f"{o2_match.group(1)}%" if o2_match else None,
+                "respiratory_rate": f"{rr_match.group(1)}/min" if rr_match else None,
+            },
+            "medications": medications,
+            "allergies": allergies,
+            "additional_notes": None,
+        }
+
+        return jsonify({"success": True, "summary": summary})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+if __name__ == "__main__":
     print("=" * 50)
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    print("  MedTriage API Server")
+    print("  http://127.0.0.1:5000")
+    print("=" * 50)
+    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)

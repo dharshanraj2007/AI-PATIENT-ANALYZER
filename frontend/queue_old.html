@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedTriage AI - Queue Management</title>
+    <meta name="description" content="Real-time patient queue management for MedTriage AI.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ═══════════════════════════════════════════
+           QUEUE PAGE — Additional Styles
+           ═══════════════════════════════════════════ */
+
+        /* Summary Cards */
+        .queue-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .queue-stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .queue-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .queue-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .queue-stat-card.card-total::before {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+        }
+
+        .queue-stat-card.card-high::before {
+            background: var(--risk-high);
+        }
+
+        .queue-stat-card.card-medium::before {
+            background: var(--risk-medium);
+        }
+
+        .queue-stat-card.card-low::before {
+            background: var(--risk-low);
+        }
+
+        .queue-stat-card.card-wait::before {
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+        }
+
+        .queue-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .card-total .queue-stat-icon {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .card-high .queue-stat-icon {
+            background: var(--risk-high-bg);
+            color: var(--risk-high);
+        }
+
+        .card-medium .queue-stat-icon {
+            background: var(--risk-medium-bg);
+            color: var(--risk-medium);
+        }
+
+        .card-low .queue-stat-icon {
+            background: var(--risk-low-bg);
+            color: var(--risk-low);
+        }
+
+        .card-wait .queue-stat-icon {
+            background: rgba(8, 145, 178, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        .queue-stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .queue-stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .queue-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        /* Queue Table */
+        .queue-table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+
+        .queue-table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .queue-table-header h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .queue-table-filters {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .queue-filter-select {
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: border-color var(--transition-fast);
+        }
+
+        .queue-filter-select:focus {
+            outline: none;
+            border-color: var(--border-focus);
+        }
+
+        .queue-table-wrap {
+            overflow-x: auto;
+        }
+
+        .queue-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        .queue-table thead {
+            background: var(--bg-input);
+        }
+
+        .queue-table th {
+            padding: 14px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .queue-table td {
+            padding: 14px 20px;
+            color: var(--text-primary);
+            border-top: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .queue-table tbody tr {
+            transition: background var(--transition-fast);
+        }
+
+        .queue-table tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        /* High-risk flash animation */
+        @keyframes highRiskFlash {
+            0%   { background: rgba(220, 38, 38, 0.35); }
+            30%  { background: rgba(220, 38, 38, 0.12); }
+            60%  { background: rgba(220, 38, 38, 0.25); }
+            100% { background: transparent; }
+        }
+
+        .queue-table tbody tr.high-risk-new {
+            animation: highRiskFlash 1.8s ease-out forwards;
+            border-left: 3px solid var(--risk-high);
+        }
+
+        /* Risk badges in table */
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .risk-badge.high {
+            background: var(--risk-high-bg);
+            color: var(--risk-high);
+        }
+
+        .risk-badge.medium {
+            background: var(--risk-medium-bg);
+            color: var(--risk-medium);
+        }
+
+        .risk-badge.low {
+            background: var(--risk-low-bg);
+            color: var(--risk-low);
+        }
+
+        .risk-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .status-badge.waiting {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+
+        .status-badge.in-treatment {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .status-badge.completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-badge.waiting .status-dot {
+            animation: pulse-dot 2s infinite;
+        }
+
+        /* Dept badge */
+        .dept-badge {
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 500;
+            background: rgba(124, 58, 237, 0.08);
+            color: var(--accent-purple);
+        }
+
+        /* Controls Bar */
+        .queue-controls {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .controls-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .queue-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border: none;
+        }
+
+        .queue-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .queue-btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-blue-glow);
+        }
+
+        .queue-btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--accent-blue-glow);
+        }
+
+        .queue-btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .queue-btn-outline:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        /* Auto-refresh toggle */
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            transition: all var(--transition-fast);
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .toggle-switch input:checked+.toggle-slider::before {
+            transform: translateX(20px);
+        }
+
+        /* Last refresh text */
+        .refresh-info {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* Empty state */
+        .queue-empty {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+        .queue-empty svg {
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .queue-empty p {
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .queue-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .queue-table th,
+            .queue-table td {
+                padding: 10px 14px;
+            }
+
+            .queue-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls-left,
+            .controls-right {
+                justify-content: center;
+            }
+
+            .qsp-position-tracker { flex-direction: column; align-items: center; }
+            .qsp-wait-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ═══════════════════════════════════════════
+           QUEUE STATUS PANEL — styles
+           ═══════════════════════════════════════════ */
+        .queue-status-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 28px;
+            margin-bottom: 28px;
+            animation: fadeIn 0.4s ease;
+        }
+        .qsp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .qsp-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .qsp-source-badge {
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 4px 14px;
+            border-radius: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+        }
+        .qsp-source-badge.live   { background: rgba(5, 150, 105, 0.1); color: var(--risk-low); }
+        .qsp-source-badge.mock   { background: rgba(217, 119, 6, 0.1); color: var(--risk-medium); }
+        .qsp-source-badge.error  { background: var(--risk-high-bg);    color: var(--risk-high); }
+
+        /* --- Position Tracker --- */
+        .qsp-position-tracker {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            padding: 24px;
+            background: var(--bg-input);
+            border-radius: var(--radius-md);
+            margin-bottom: 24px;
+        }
+        .qsp-position-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            flex-shrink: 0;
+        }
+        .qsp-ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .qsp-ring-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 10;
+        }
+        .qsp-ring-fill {
+            fill: none;
+            stroke: var(--accent-blue);
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-dasharray: 326.73;
+            stroke-dashoffset: 326.73;
+            transition: stroke-dashoffset 1s ease;
+        }
+        .qsp-ring-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .qsp-ring-value {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent-blue);
+            line-height: 1;
+        }
+        .qsp-ring-text {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        .qsp-position-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .qsp-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .qsp-detail-row:last-child { border-bottom: none; }
+        .qsp-detail-label {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .qsp-detail-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .qsp-dept {
+            padding: 3px 10px;
+            border-radius: var(--radius-sm);
+            background: rgba(124, 58, 237, 0.08);
+            color: var(--accent-purple);
+            font-size: 0.82rem;
+        }
+
+        /* --- Wait Time Cards --- */
+        .qsp-wait-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+        .qsp-wait-card {
+            padding: 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+        .qsp-wait-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+        .qsp-wait-est::before  { background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); }
+        .qsp-wait-avg::before  { background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue)); }
+        .qsp-wait-longest::before { background: linear-gradient(90deg, var(--risk-medium), var(--risk-high)); }
+
+        .qsp-wait-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .qsp-wait-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qsp-wait-est .qsp-wait-icon  { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); }
+        .qsp-wait-avg .qsp-wait-icon  { background: rgba(124, 58, 237, 0.08); color: var(--accent-purple); }
+        .qsp-wait-longest .qsp-wait-icon { background: var(--risk-high-bg); color: var(--risk-high); }
+
+        .qsp-wait-icon svg { width: 20px; height: 20px; }
+        .qsp-wait-info { display: flex; flex-direction: column; }
+        .qsp-wait-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+        .qsp-wait-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .qsp-wait-bar-wrap {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .qsp-wait-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+        .qsp-wait-est .qsp-wait-bar  { background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); }
+        .qsp-wait-avg .qsp-wait-bar  { background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue)); }
+        .qsp-wait-longest .qsp-wait-bar { background: linear-gradient(90deg, var(--risk-medium), var(--risk-high)); }
+
+        /* --- Department Breakdown --- */
+        .qsp-dept-breakdown h4 {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+        }
+        .qsp-dept-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .qsp-dept-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-input);
+            transition: background var(--transition-fast);
+        }
+        .qsp-dept-row:hover { background: var(--bg-card-hover); }
+        .qsp-dept-name {
+            width: 150px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            flex-shrink: 0;
+        }
+        .qsp-dept-bar-wrap {
+            flex: 1;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .qsp-dept-bar {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            transition: width 0.8s ease;
+        }
+        .qsp-dept-wait-val {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            width: 60px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .qsp-dept-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            width: 40px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">MedTriage</span>
+                    <span class="logo-subtitle">AI System</span>
+                </div>
+            </div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link" id="nav-dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    <span>Dashboard</span>
+                </a></li>
+            <li><a href="index.html" class="nav-link" id="nav-assessment">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                    </svg>
+                    <span>Patient Assessment</span>
+                </a></li>
+            <li><a href="queue.html" class="nav-link active" id="nav-queue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span>Queue Management</span>
+                </a></li>
+            <li><a href="index.html" class="nav-link" id="nav-analytics">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    <span>Analytics</span>
+                </a></li>
+            <li><a href="index.html" class="nav-link" id="nav-history">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span>History</span>
+                </a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="model-badge">
+                <div class="model-status"></div>
+                <span>AI Model Active</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <button class="menu-toggle" id="menuToggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+        </button>
+        <div class="logo-text">
+            <span class="logo-title">MedTriage AI</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Page Header -->
+        <div class="section-header">
+            <div>
+                <h1>Queue Management</h1>
+                <p class="section-subtitle">Real-time patient queue monitoring and prioritization</p>
+            </div>
+            <div class="header-badge">
+                <span class="accuracy-badge" id="queueStatusBadge">● Live</span>
+            </div>
+        </div>
+
+        <!-- Section 1: Summary Cards -->
+        <div class="queue-stats-grid" id="queueStatsGrid">
+            <div class="queue-stat-card card-total">
+                <div class="queue-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                </div>
+                <div class="queue-stat-info">
+                    <span class="queue-stat-value" id="statTotal">12</span>
+                    <span class="queue-stat-label">Total in Queue</span>
+                </div>
+            </div>
+            <div class="queue-stat-card card-high">
+                <div class="queue-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon
+                            points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                </div>
+                <div class="queue-stat-info">
+                    <span class="queue-stat-value" id="statHigh">3</span>
+                    <span class="queue-stat-label">High Risk</span>
+                </div>
+            </div>
+            <div class="queue-stat-card card-medium">
+                <div class="queue-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                </div>
+                <div class="queue-stat-info">
+                    <span class="queue-stat-value" id="statMedium">5</span>
+                    <span class="queue-stat-label">Medium Risk</span>
+                </div>
+            </div>
+            <div class="queue-stat-card card-low">
+                <div class="queue-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                </div>
+                <div class="queue-stat-info">
+                    <span class="queue-stat-value" id="statLow">4</span>
+                    <span class="queue-stat-label">Low Risk</span>
+                </div>
+            </div>
+            <div class="queue-stat-card card-wait">
+                <div class="queue-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                </div>
+                <div class="queue-stat-info">
+                    <span class="queue-stat-value" id="statWait">18 min</span>
+                    <span class="queue-stat-label">Avg Wait Time</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Queue Status Dashboard -->
+        <div class="queue-status-panel" id="queueStatusPanel">
+            <div class="qsp-header">
+                <h3>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Queue Status &amp; Wait Times
+                </h3>
+                <span class="qsp-source-badge" id="qspSourceBadge">● Connecting…</span>
+            </div>
+
+            <!-- Patient Position Tracker -->
+            <div class="qsp-position-tracker" id="qspPositionTracker">
+                <div class="qsp-position-ring">
+                    <svg viewBox="0 0 120 120" class="qsp-ring-svg">
+                        <circle cx="60" cy="60" r="52" class="qsp-ring-bg"/>
+                        <circle cx="60" cy="60" r="52" class="qsp-ring-fill" id="qspRingFill"/>
+                    </svg>
+                    <div class="qsp-ring-label">
+                        <span class="qsp-ring-value" id="qspPositionValue">--</span>
+                        <span class="qsp-ring-text">Position</span>
+                    </div>
+                </div>
+                <div class="qsp-position-details">
+                    <div class="qsp-detail-row">
+                        <span class="qsp-detail-label">Your queue position</span>
+                        <span class="qsp-detail-value" id="qspPosNum">--</span>
+                    </div>
+                    <div class="qsp-detail-row">
+                        <span class="qsp-detail-label">Patients ahead of you</span>
+                        <span class="qsp-detail-value" id="qspAhead">--</span>
+                    </div>
+                    <div class="qsp-detail-row">
+                        <span class="qsp-detail-label">Total in queue</span>
+                        <span class="qsp-detail-value" id="qspTotalQueue">--</span>
+                    </div>
+                    <div class="qsp-detail-row">
+                        <span class="qsp-detail-label">Department</span>
+                        <span class="qsp-detail-value qsp-dept" id="qspDept">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wait Time Cards -->
+            <div class="qsp-wait-grid">
+                <div class="qsp-wait-card qsp-wait-est">
+                    <div class="qsp-wait-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="qsp-wait-info">
+                        <span class="qsp-wait-value" id="qspEstWait">--</span>
+                        <span class="qsp-wait-label">Estimated Wait</span>
+                    </div>
+                    <div class="qsp-wait-bar-wrap">
+                        <div class="qsp-wait-bar" id="qspEstBar" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="qsp-wait-card qsp-wait-avg">
+                    <div class="qsp-wait-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6"  y1="20" x2="6"  y2="14"/>
+                        </svg>
+                    </div>
+                    <div class="qsp-wait-info">
+                        <span class="qsp-wait-value" id="qspAvgWait">--</span>
+                        <span class="qsp-wait-label">Avg Wait (all depts)</span>
+                    </div>
+                    <div class="qsp-wait-bar-wrap">
+                        <div class="qsp-wait-bar" id="qspAvgBar" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="qsp-wait-card qsp-wait-longest">
+                    <div class="qsp-wait-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <div class="qsp-wait-info">
+                        <span class="qsp-wait-value" id="qspLongestWait">--</span>
+                        <span class="qsp-wait-label">Longest Dept Wait</span>
+                    </div>
+                    <div class="qsp-wait-bar-wrap">
+                        <div class="qsp-wait-bar" id="qspLongestBar" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Per-Department Breakdown -->
+            <div class="qsp-dept-breakdown">
+                <h4>Wait Times by Department</h4>
+                <div class="qsp-dept-list" id="qspDeptList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Live Queue Table -->
+        <div class="queue-table-card">
+            <div class="queue-table-header">
+                <h3>Live Patient Queue</h3>
+                <div class="queue-table-filters">
+                    <select class="queue-filter-select" id="filterDepartment">
+                        <option value="all">All Departments</option>
+                        <option value="Emergency">Emergency</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Internal Medicine">Internal Medicine</option>
+                        <option value="Pulmonology">Pulmonology</option>
+                        <option value="General Practice">General Practice</option>
+                    </select>
+                    <select class="queue-filter-select" id="filterStatus">
+                        <option value="all">All Status</option>
+                        <option value="Waiting">Waiting</option>
+                        <option value="In Treatment">In Treatment</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="queue-table-wrap">
+                <table class="queue-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Patient ID</th>
+                            <th>Risk Level</th>
+                            <th>Department</th>
+                            <th>Arrival Time</th>
+                            <th>Est. Wait</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queueTableBody">
+                        <!-- Placeholder rows -->
+                        <tr>
+                            <td>1</td>
+                            <td>PT-4829</td>
+                            <td><span class="risk-badge high"><span class="risk-badge-dot"></span>High</span></td>
+                            <td><span class="dept-badge">Emergency</span></td>
+                            <td>14:02</td>
+                            <td>5 min</td>
+                            <td><span class="status-badge waiting"><span class="status-dot"></span>Waiting</span></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>PT-7213</td>
+                            <td><span class="risk-badge high"><span class="risk-badge-dot"></span>High</span></td>
+                            <td><span class="dept-badge">Cardiology</span></td>
+                            <td>14:08</td>
+                            <td>10 min</td>
+                            <td><span class="status-badge in-treatment"><span class="status-dot"></span>In
+                                    Treatment</span></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>PT-3051</td>
+                            <td><span class="risk-badge high"><span class="risk-badge-dot"></span>High</span></td>
+                            <td><span class="dept-badge">Pulmonology</span></td>
+                            <td>14:11</td>
+                            <td>12 min</td>
+                            <td><span class="status-badge waiting"><span class="status-dot"></span>Waiting</span></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>PT-9467</td>
+                            <td><span class="risk-badge medium"><span class="risk-badge-dot"></span>Medium</span></td>
+                            <td><span class="dept-badge">Internal Medicine</span></td>
+                            <td>13:45</td>
+                            <td>15 min</td>
+                            <td><span class="status-badge waiting"><span class="status-dot"></span>Waiting</span></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>PT-1184</td>
+                            <td><span class="risk-badge medium"><span class="risk-badge-dot"></span>Medium</span></td>
+                            <td><span class="dept-badge">Cardiology</span></td>
+                            <td>13:52</td>
+                            <td>18 min</td>
+                            <td><span class="status-badge waiting"><span class="status-dot"></span>Waiting</span></td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>PT-6830</td>
+                            <td><span class="risk-badge medium"><span class="risk-badge-dot"></span>Medium</span></td>
+                            <td><span class="dept-badge">Emergency</span></td>
+                            <td>14:15</td>
+                            <td>20 min</td>
+                            <td><span class="status-badge in-treatment"><span class="status-dot"></span>In
+                                    Treatment</span></td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>PT-2295</td>
+                            <td><span class="risk-badge medium"><span class="risk-badge-dot"></span>Medium</span></td>
+                            <td><span class="dept-badge">Internal Medicine</span></td>
+                            <td>14:20</td>
+                            <td>22 min</td>
+                            <td><span class="status-badge waiting"><span class="status-dot"></span>Waiting</span></td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>PT-5502</td>
+                            <td><span class="risk-badge medium"><span class="risk-badge-dot"></span>Medium</span></td>
+                            <td><span class="dept-badge">Pulmonology</span></td>
+                            <td>14:22</td>
+                            <td>25 min</td>
+                            <td><span class="status-badge completed"><span class="status-dot"></span>Completed</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>PT-8741</td>
+                            <td><span class="risk-badge low"><span class="risk-badge-dot"></span>Low</span></td>
+                            <td><span class="dept-badge">General Practice</span></td>
+                            <td>13:30</td>
+                            <td>28 min</td>
+                            <td><span class="status-badge waiting"><span class="status-dot"></span>Waiting</span></td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>PT-4106</td>
+                            <td><span class="risk-badge low"><span class="risk-badge-dot"></span>Low</span></td>
+                            <td><span class="dept-badge">General Practice</span></td>
+                            <td>13:38</td>
+                            <td>30 min</td>
+                            <td><span class="status-badge waiting"><span class="status-dot"></span>Waiting</span></td>
+                        </tr>
+                        <tr>
+                            <td>11</td>
+                            <td>PT-3378</td>
+                            <td><span class="risk-badge low"><span class="risk-badge-dot"></span>Low</span></td>
+                            <td><span class="dept-badge">Internal Medicine</span></td>
+                            <td>14:25</td>
+                            <td>32 min</td>
+                            <td><span class="status-badge completed"><span class="status-dot"></span>Completed</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>12</td>
+                            <td>PT-6019</td>
+                            <td><span class="risk-badge low"><span class="risk-badge-dot"></span>Low</span></td>
+                            <td><span class="dept-badge">General Practice</span></td>
+                            <td>14:30</td>
+                            <td>35 min</td>
+                            <td><span class="status-badge waiting"><span class="status-dot"></span>Waiting</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 3: Controls -->
+        <div class="queue-controls">
+            <div class="controls-left">
+                <button class="queue-btn queue-btn-primary" id="refreshBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10" />
+                        <polyline points="1 20 1 14 7 14" />
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                    </svg>
+                    Refresh Queue
+                </button>
+                <span class="refresh-info" id="lastRefresh">Last updated: just now</span>
+            </div>
+            <div class="controls-right">
+                <div class="toggle-wrap">
+                    <span>Auto-refresh</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoRefreshToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="queue.js"></script>
+</body>
+
+</html>

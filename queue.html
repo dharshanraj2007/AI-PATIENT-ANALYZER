@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedTriage - Queue Management</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-primary: #f0f4f8;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8fafc;
+    --bg-input: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent-blue: #3b82f6;
+    --accent-blue-glow: rgba(59, 130, 246, 0.2);
+    --accent-purple: #7c3aed;
+    --accent-cyan: #0891b2;
+    --risk-low: #059669;
+    --risk-low-bg: rgba(5, 150, 105, 0.08);
+    --risk-medium: #d97706;
+    --risk-medium-bg: rgba(217, 119, 6, 0.08);
+    --risk-high: #dc2626;
+    --risk-high-bg: rgba(220, 38, 38, 0.08);
+    --border: rgba(0, 0, 0, 0.08);
+    --border-focus: rgba(59, 130, 246, 0.5);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --shadow-glow: 0 0 20px var(--accent-blue-glow);
+    --sidebar-width: 260px;
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+    --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed; left: 0; top: 0;
+    width: var(--sidebar-width); height: 100vh;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    display: flex; flex-direction: column;
+    z-index: 100;
+  }
+  .sidebar-header {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 18px;
+  }
+  .logo-text { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+  .logo-sub { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+  .nav-links {
+    list-style: none; padding: 16px 12px; flex: 1;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .nav-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: var(--radius-md);
+    color: var(--text-secondary); text-decoration: none;
+    font-size: 0.9rem; font-weight: 500;
+    transition: all var(--transition-fast); position: relative;
+  }
+  .nav-link:hover { background: var(--bg-input); color: var(--accent-blue); }
+  .nav-link.active {
+    background: rgba(59,130,246,0.08); color: var(--accent-blue); font-weight: 600;
+  }
+  .nav-link.active::before {
+    content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 24px; background: var(--accent-blue); border-radius: 0 4px 4px 0;
+  }
+  .nav-link svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .sidebar-footer {
+    padding: 16px 20px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.8rem; color: var(--risk-low);
+  }
+  .status-dot { width: 8px; height: 8px; background: var(--risk-low); border-radius: 50%; }
+
+  /* ── Main Content ── */
+  .main-content {
+    margin-left: var(--sidebar-width); flex: 1;
+    padding: 28px 32px; min-height: 100vh;
+  }
+
+  /* ── Page Header ── */
+  .page-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-header h1 { font-size: 1.65rem; font-weight: 700; color: var(--text-primary); }
+  .page-header p { font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px; }
+  .header-controls { display: flex; align-items: center; gap: 14px; }
+  .updated-text { font-size: 0.8rem; color: var(--text-muted); }
+  .toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); }
+  .toggle-track {
+    width: 40px; height: 22px; background: var(--accent-blue);
+    border-radius: 11px; position: relative; cursor: pointer; transition: background 0.2s;
+  }
+  .toggle-track.off { background: #cbd5e1; }
+  .toggle-track .toggle-knob {
+    width: 18px; height: 18px; background: #fff; border-radius: 50%;
+    position: absolute; top: 2px; right: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: all 0.2s;
+  }
+  .toggle-track.off .toggle-knob { right: auto; left: 2px; }
+  .btn {
+    padding: 8px 18px; border-radius: var(--radius-sm);
+    font-size: 0.85rem; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg-secondary);
+    color: var(--text-primary); display: inline-flex; align-items: center; gap: 6px;
+    transition: all var(--transition-fast);
+  }
+  .btn:hover { background: var(--bg-input); }
+  .btn-primary { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-green { background: var(--risk-low); color: #fff; border-color: var(--risk-low); }
+  .btn-green:hover { background: #047857; }
+
+  /* ── Layout Grid ── */
+  .q-layout { display: flex; gap: 24px; }
+  .q-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  .q-side { width: 310px; min-width: 290px; display: flex; flex-direction: column; gap: 18px; }
+
+  /* ── Stat Cards ── */
+  .stats-row { display: flex; gap: 16px; }
+  .stat-card {
+    flex: 1; background: var(--bg-card); border-radius: var(--radius-lg);
+    padding: 20px; display: flex; align-items: center; justify-content: space-between;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+  }
+  .stat-info {}
+  .stat-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
+  .stat-value { font-size: 2rem; font-weight: 700; color: var(--text-primary); line-height: 1.1; }
+  .stat-value small { font-size: 0.5em; color: var(--text-muted); font-weight: 400; }
+  .stat-value.red { color: var(--risk-high); }
+  .stat-mini-chart { width: 72px; height: 40px; }
+  .stat-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+  .stat-sub .up { color: var(--risk-high); }
+  .stat-sub .down { color: var(--risk-low); }
+
+  /* ── Card ── */
+  .card {
+    background: var(--bg-card); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border); overflow: hidden;
+  }
+  .card-header {
+    padding: 18px 22px 0; display: flex; flex-direction: column; gap: 12px;
+  }
+  .card-header h2 { font-size: 1.1rem; font-weight: 700; }
+  .card-header h3 { font-size: 1rem; font-weight: 700; }
+  .card-body { padding: 0 22px 20px; }
+  .card-footer {
+    padding: 12px 22px; background: var(--bg-input); border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px; font-size: 0.82rem; color: var(--text-secondary);
+    flex-wrap: wrap;
+  }
+  .card-footer select {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 4px 10px; font-size: 0.82rem; background: var(--bg-secondary);
+  }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 6px; }
+  .tab {
+    padding: 7px 18px; border-radius: var(--radius-sm);
+    font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+    background: var(--bg-input); cursor: pointer; border: none;
+    transition: all var(--transition-fast);
+  }
+  .tab.active { background: var(--accent-blue); color: #fff; }
+  .tab:hover:not(.active) { background: #e2e8f0; }
+
+  /* ── Queue Table ── */
+  .q-table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+  .q-table thead th {
+    text-align: left; padding: 10px 14px;
+    font-size: 0.78rem; color: var(--text-muted); font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .q-table thead th.sortable { cursor: pointer; }
+  .q-table thead th.sortable:hover { color: var(--accent-blue); }
+  .q-table tbody tr { border-bottom: 1px solid rgba(0,0,0,0.04); transition: background 0.1s; }
+  .q-table tbody tr:hover { background: var(--bg-card-hover); }
+  .q-table tbody td { padding: 12px 14px; font-size: 0.88rem; color: var(--text-primary); vertical-align: middle; }
+
+  .patient-cell { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--bg-input);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; color: var(--text-muted); overflow: hidden; flex-shrink: 0;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    padding: 4px 14px; border-radius: 20px;
+    font-size: 0.78rem; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .badge-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .badge-high { background: var(--risk-high-bg); color: var(--risk-high); border: 1px solid rgba(220,38,38,0.15); }
+  .badge-high .badge-dot { background: var(--risk-high); }
+  .badge-medium { background: var(--risk-medium-bg); color: var(--risk-medium); border: 1px solid rgba(217,119,6,0.15); }
+  .badge-medium .badge-dot { background: var(--risk-medium); }
+  .badge-low { background: var(--risk-low-bg); color: var(--risk-low); border: 1px solid rgba(5,150,105,0.15); }
+  .badge-low .badge-dot { background: var(--risk-low); }
+  .status-next { padding: 4px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; background: var(--accent-blue); color: #fff; }
+  .status-waiting { padding: 4px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; background: var(--risk-low-bg); color: var(--risk-low); border: 1px solid rgba(5,150,105,0.15); }
+
+  /* ── Bottom Grid ── */
+  .bottom-grid { display: flex; gap: 18px; }
+  .bottom-grid .card { flex: 1; }
+  .metric-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 0.88rem; }
+  .metric-label { color: var(--text-secondary); }
+  .metric-val { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .metric-pct { font-size: 0.72rem; padding: 2px 10px; border-radius: 10px; font-weight: 600; }
+  .pct-red { background: var(--risk-high-bg); color: var(--risk-high); }
+  .pct-green { background: var(--risk-low-bg); color: var(--risk-low); }
+  .legend { display: flex; gap: 18px; margin-top: 14px; font-size: 0.82rem; }
+  .legend-item { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .dept-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.82rem; }
+  .dept-name { min-width: 90px; color: var(--text-secondary); }
+  .dept-bar-track { flex: 1; height: 8px; background: var(--bg-input); border-radius: 4px; overflow: hidden; }
+  .dept-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .dept-val { font-weight: 600; min-width: 50px; text-align: right; color: var(--text-primary); }
+
+  /* ── Side Panel ── */
+  .side-card {
+    background: var(--bg-card); border-radius: var(--radius-lg);
+    padding: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+  }
+  .side-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; }
+  .patient-summary { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .summary-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 1.1rem; }
+  .summary-name { font-weight: 700; font-size: 0.95rem; }
+  .summary-id { font-size: 0.78rem; color: var(--text-muted); }
+  .detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
+  .detail-label { color: var(--text-muted); }
+  .detail-value { font-weight: 600; }
+  .detail-value.high { color: var(--risk-high); }
+
+  /* ── Forecast Chart ── */
+  .forecast-chart { margin: 8px 0 14px; }
+  .alert-box {
+    background: var(--risk-medium-bg); border: 1px solid rgba(217,119,6,0.2);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 0.78rem; color: #92400e;
+  }
+  .alert-icon { font-size: 1rem; flex-shrink: 0; }
+
+  /* ── Risk Patients ── */
+  .risk-patient { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+  .risk-patient:last-child { border-bottom: none; }
+  .risk-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+  .risk-info { flex: 1; }
+  .risk-name { font-weight: 600; font-size: 0.88rem; }
+  .risk-vitals { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+  .risk-time { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+  .risk-score {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.82rem; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .score-green { background: var(--risk-low); }
+  .score-amber { background: var(--risk-medium); }
+  .score-red { background: var(--risk-high); }
+
+  /* ── Responsive ── */
+  @media (max-width: 1280px) {
+    .q-layout { flex-direction: column; }
+    .q-side { width: 100%; flex-direction: row; flex-wrap: wrap; }
+    .q-side .side-card { flex: 1; min-width: 280px; }
+  }
+  @media (max-width: 900px) {
+    .stats-row { flex-direction: column; }
+    .bottom-grid { flex-direction: column; }
+  }
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .main-content { margin-left: 0; padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════ Sidebar ══════ -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-icon">M</div>
+    <div>
+      <div class="logo-text">MedTriage</div>
+      <div class="logo-sub">AI SYSTEM</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html" class="nav-link" data-section="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Dashboard</span>
+    </a></li>
+    <li><a href="index.html#assessment" class="nav-link" data-section="assessment">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+      <span>Patient Assessment</span>
+    </a></li>
+    <li><a href="index.html#analytics" class="nav-link" data-section="analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Analytics</span>
+    </a></li>
+    <li><a href="index.html#history" class="nav-link" data-section="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>History</span>
+    </a></li>
+    <li><a href="queue.html" class="nav-link active" id="nav-queue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Queue Management</span>
+    </a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <span class="status-dot"></span> AI Model Active
+  </div>
+</aside>
+
+<!-- ══════ Main Content ══════ -->
+<main class="main-content">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1>Queue Management</h1>
+      <p>Real-time hospital queue and patient flow optimization</p>
+    </div>
+    <div class="header-controls">
+      <span class="updated-text" id="lastUpdatedText">Updated Just Now</span>
+      <div class="toggle-wrap">
+        <span>Auto-Refresh</span>
+        <div class="toggle-track" id="autoRefreshToggle"><div class="toggle-knob"></div></div>
+      </div>
+      <button class="btn" id="refreshBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="q-layout">
+    <!-- ── Left Column ── -->
+    <div class="q-main">
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Total Patients</div>
+            <div class="stat-value" id="statTotal">20</div>
+            <div class="stat-sub"><span class="up">↑ 12%</span> from yesterday</div>
+          </div>
+          <div class="stat-mini-chart">
+            <svg viewBox="0 0 80 40" fill="none"><path d="M4 32 Q14 28 20 22 T36 18 Q46 16 52 20 T66 12 Q74 9 76 7" stroke="var(--accent-blue)" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M4 32 Q14 28 20 22 T36 18 Q46 16 52 20 T66 12 Q74 9 76 7 L76 40 L4 40Z" fill="var(--accent-blue)" opacity="0.08"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label" style="color:var(--risk-high)">High Risk</div>
+            <div class="stat-value red" id="statHighRisk">6</div>
+            <div class="stat-sub"><span class="up">↑ 2</span> in last hour</div>
+          </div>
+          <div class="stat-mini-chart">
+            <svg viewBox="0 0 80 40" fill="none"><path d="M4 28 Q14 26 22 30 T38 22 Q48 17 58 15 T76 8" stroke="var(--risk-high)" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M4 28 Q14 26 22 30 T38 22 Q48 17 58 15 T76 8 L76 40 L4 40Z" fill="var(--risk-high)" opacity="0.08"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Average Wait Time</div>
+            <div class="stat-value" id="statWaitTime">27 <small>min</small></div>
+            <div class="stat-sub"><span class="down">↓ 3 min</span> vs avg</div>
+          </div>
+          <div class="stat-mini-chart">
+            <svg viewBox="0 0 50 50" fill="none">
+              <circle cx="25" cy="25" r="18" stroke="var(--bg-input)" stroke-width="5" fill="none"/>
+              <circle cx="25" cy="25" r="18" stroke="var(--accent-blue)" stroke-width="5" fill="none" stroke-dasharray="78 113" stroke-linecap="round" transform="rotate(-90 25 25)"/>
+              <text x="25" y="29" text-anchor="middle" font-size="12" fill="var(--accent-blue)" font-weight="600">⏱</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Patient Queue -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Active Patient Queue</h2>
+          <div class="tabs">
+            <button class="tab active" data-dept="all">All Departments</button>
+            <button class="tab" data-dept="emergency">Emergency</button>
+            <button class="tab" data-dept="cardiology">Cardiology</button>
+            <button class="tab" data-dept="pulmonology">Pulmonary</button>
+            <button class="tab" data-dept="internal">Internal Med</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding-top:0">
+          <table class="q-table" id="queueTable">
+            <thead>
+              <tr>
+                <th style="width:50px">Queue</th>
+                <th>Patient ID</th>
+                <th class="sortable">Risk Level ⇅</th>
+                <th>Arrival Mode</th>
+                <th>Department</th>
+                <th>Wait Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="queueBody">
+              <tr data-dept="emergency">
+                <td>1</td>
+                <td><div class="patient-cell"><div class="avatar">JD</div>PAT-2421</div></td>
+                <td><span class="badge badge-high"><span class="badge-dot"></span>High</span></td>
+                <td>Ambulance</td>
+                <td>Emergency</td>
+                <td>2 min</td>
+                <td><span class="status-next">Next</span></td>
+              </tr>
+              <tr data-dept="cardiology">
+                <td>2</td>
+                <td><div class="patient-cell"><div class="avatar">MR</div>PAT-2414</div></td>
+                <td><span class="badge badge-medium"><span class="badge-dot"></span>Medium</span></td>
+                <td>Wheelchair</td>
+                <td>Cardiology</td>
+                <td>15 min</td>
+                <td><span class="status-waiting">Waiting</span></td>
+              </tr>
+              <tr data-dept="pulmonology">
+                <td>3</td>
+                <td><div class="patient-cell"><div class="avatar">SK</div>PAT-2413</div></td>
+                <td><span class="badge badge-high"><span class="badge-dot"></span>High</span></td>
+                <td>Ambulance</td>
+                <td>Pulmonology</td>
+                <td>4 min</td>
+                <td><span class="status-waiting">Waiting</span></td>
+              </tr>
+              <tr data-dept="internal">
+                <td>4</td>
+                <td><div class="patient-cell"><div class="avatar">AL</div>PAT-2411</div></td>
+                <td><span class="badge badge-medium"><span class="badge-dot"></span>Medium</span></td>
+                <td>Walk-in</td>
+                <td>Internal Med</td>
+                <td>20 min</td>
+                <td><span class="status-waiting">Waiting</span></td>
+              </tr>
+              <tr data-dept="emergency">
+                <td>5</td>
+                <td><div class="patient-cell"><div class="avatar">RB</div>PAT-2409</div></td>
+                <td><span class="badge badge-low"><span class="badge-dot"></span>Low</span></td>
+                <td>Walk-in</td>
+                <td>Emergency</td>
+                <td>13 min</td>
+                <td><span class="status-waiting">Waiting</span></td>
+              </tr>
+              <tr data-dept="internal">
+                <td>6</td>
+                <td><div class="patient-cell"><div class="avatar">TC</div>PAT-2416</div></td>
+                <td><span class="badge badge-low"><span class="badge-dot"></span>Low</span></td>
+                <td>Walk-in</td>
+                <td>Internal Med</td>
+                <td>18 min</td>
+                <td><span class="status-waiting">Waiting</span></td>
+              </tr>
+              <tr data-dept="cardiology">
+                <td>7</td>
+                <td><div class="patient-cell"><div class="avatar">NP</div>PAT-2405</div></td>
+                <td><span class="badge badge-high"><span class="badge-dot"></span>High</span></td>
+                <td>Ambulance</td>
+                <td>Cardiology</td>
+                <td>6 min</td>
+                <td><span class="status-waiting">Waiting</span></td>
+              </tr>
+              <tr data-dept="pulmonology">
+                <td>8</td>
+                <td><div class="patient-cell"><div class="avatar">EW</div>PAT-2402</div></td>
+                <td><span class="badge badge-medium"><span class="badge-dot"></span>Medium</span></td>
+                <td>Wheelchair</td>
+                <td>Pulmonology</td>
+                <td>22 min</td>
+                <td><span class="status-waiting">Waiting</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer">
+          <div class="toggle-wrap">
+            <div class="toggle-track" id="tableAutoRefresh"><div class="toggle-knob"></div></div>
+            Auto-Refresh
+          </div>
+          <span>·</span>
+          <span>Last updated: <strong id="tableLastUpdate">Just Now</strong></span>
+          <span style="margin-left:auto">Refresh Every</span>
+          <select id="refreshInterval"><option value="15">15s</option><option value="30" selected>30s</option><option value="60">60s</option></select>
+          <button class="btn" id="tableRefreshBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Grid -->
+      <div class="bottom-grid">
+        <!-- Queue Metrics -->
+        <div class="card">
+          <div class="card-header"><h3>Queue Metrics</h3></div>
+          <div class="card-body">
+            <div class="metric-row">
+              <span class="metric-label">Total Patients</span>
+              <span class="metric-val">20 <span class="metric-pct pct-red">↑ 88%</span></span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">High Risk Patients</span>
+              <span class="metric-val">6 <span style="font-size:0.78rem;color:var(--text-muted)">(30%)</span></span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Avg Wait Time</span>
+              <span class="metric-val">27 min <span class="metric-pct pct-green">↓ 10%</span></span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Beds Available</span>
+              <span class="metric-val">8 / 24</span>
+            </div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--risk-high)"></div>High</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--risk-medium)"></div>Medium</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--risk-low)"></div>Low</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Avg Wait by Department -->
+        <div class="card">
+          <div class="card-header">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+              <h3>Avg Wait by Department</h3>
+              <button class="btn btn-green btn-sm" id="deptRefreshBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="dept-row">
+              <span class="dept-name">Emergency</span>
+              <div class="dept-bar-track"><div class="dept-bar-fill" style="width:85%;background:var(--risk-high)"></div></div>
+              <span class="dept-val">32 min</span>
+            </div>
+            <div class="dept-row">
+              <span class="dept-name">Cardiology</span>
+              <div class="dept-bar-track"><div class="dept-bar-fill" style="width:65%;background:var(--risk-medium)"></div></div>
+              <span class="dept-val">24 min</span>
+            </div>
+            <div class="dept-row">
+              <span class="dept-name">Pulmonology</span>
+              <div class="dept-bar-track"><div class="dept-bar-fill" style="width:55%;background:var(--accent-blue)"></div></div>
+              <span class="dept-val">20 min</span>
+            </div>
+            <div class="dept-row">
+              <span class="dept-name">Internal Med</span>
+              <div class="dept-bar-track"><div class="dept-bar-fill" style="width:45%;background:var(--risk-low)"></div></div>
+              <span class="dept-val">17 min</span>
+            </div>
+            <div class="dept-row">
+              <span class="dept-name">General</span>
+              <div class="dept-bar-track"><div class="dept-bar-fill" style="width:30%;background:var(--accent-cyan)"></div></div>
+              <span class="dept-val">12 min</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Right Side Panel ── -->
+    <div class="q-side">
+
+      <!-- Summary Card -->
+      <div class="side-card">
+        <h3>Next Patient Summary</h3>
+        <div class="patient-summary">
+          <div class="summary-avatar">JD</div>
+          <div>
+            <div class="summary-name">John Doe</div>
+            <div class="summary-id">PAT-2421</div>
+          </div>
+        </div>
+        <div class="detail-row"><span class="detail-label">Risk Level</span><span class="detail-value high">● High</span></div>
+        <div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">Emergency</span></div>
+        <div class="detail-row"><span class="detail-label">Wait Time</span><span class="detail-value">2 min</span></div>
+        <div class="detail-row"><span class="detail-label">Arrival Mode</span><span class="detail-value">Ambulance</span></div>
+        <div class="detail-row"><span class="detail-label">Heart Rate</span><span class="detail-value high">142 bpm</span></div>
+        <div class="detail-row"><span class="detail-label">O₂ Saturation</span><span class="detail-value high">88%</span></div>
+        <div class="detail-row"><span class="detail-label">Blood Pressure</span><span class="detail-value high">185/110 mmHg</span></div>
+        <div class="detail-row"><span class="detail-label">Temperature</span><span class="detail-value">38.9°C</span></div>
+      </div>
+
+      <!-- Wait Time Forecast -->
+      <div class="side-card">
+        <h3>Wait Time Forecast</h3>
+        <div class="forecast-chart">
+          <svg viewBox="0 0 260 110" width="100%" fill="none">
+            <line x1="30" y1="10" x2="250" y2="10" stroke="var(--border)" stroke-width="0.5"/>
+            <line x1="30" y1="35" x2="250" y2="35" stroke="var(--border)" stroke-width="0.5"/>
+            <line x1="30" y1="60" x2="250" y2="60" stroke="var(--border)" stroke-width="0.5"/>
+            <line x1="30" y1="85" x2="250" y2="85" stroke="var(--border)" stroke-width="0.5"/>
+            <text x="5" y="14" font-size="8" fill="var(--text-muted)">40m</text>
+            <text x="5" y="39" font-size="8" fill="var(--text-muted)">30m</text>
+            <text x="5" y="64" font-size="8" fill="var(--text-muted)">20m</text>
+            <text x="5" y="89" font-size="8" fill="var(--text-muted)">10m</text>
+            <text x="40" y="105" font-size="8" fill="var(--text-muted)">Now</text>
+            <text x="100" y="105" font-size="8" fill="var(--text-muted)">+15m</text>
+            <text x="170" y="105" font-size="8" fill="var(--text-muted)">+30m</text>
+            <text x="230" y="105" font-size="8" fill="var(--text-muted)">+45m</text>
+            <path d="M40 65 Q70 60 100 52 Q140 42 180 30 Q210 20 245 12" stroke="var(--risk-high)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M40 65 Q70 60 100 52 Q140 42 180 30 Q210 20 245 12 L245 85 L40 85Z" fill="var(--risk-high)" opacity="0.06"/>
+            <circle cx="40" cy="65" r="3.5" fill="var(--risk-high)"/>
+            <circle cx="100" cy="52" r="3.5" fill="var(--risk-high)"/>
+            <circle cx="180" cy="30" r="3.5" fill="var(--risk-high)"/>
+            <circle cx="245" cy="12" r="3.5" fill="var(--risk-high)"/>
+          </svg>
+        </div>
+        <div class="alert-box">
+          <span class="alert-icon">⚠️</span>
+          <span><strong>Alert:</strong> High congestion expected in ~30 min. Consider alerting additional staff.</span>
+        </div>
+      </div>
+
+      <!-- Potential High Risk -->
+      <div class="side-card">
+        <h3>Potential High Risk Patients</h3>
+        <div class="risk-patient">
+          <div class="risk-avatar">JF</div>
+          <div class="risk-info">
+            <div class="risk-name">Jane Foster</div>
+            <div class="risk-vitals">O₂: 91% · HR: 132 bpm</div>
+            <div class="risk-time">Waiting: 18 min</div>
+          </div>
+          <div class="risk-score score-amber">58</div>
+        </div>
+        <div class="risk-patient">
+          <div class="risk-avatar">DR</div>
+          <div class="risk-info">
+            <div class="risk-name">Daniel Reed</div>
+            <div class="risk-vitals">HR: 124 bpm · BP: 176/99</div>
+            <div class="risk-time">Waiting: 22 min</div>
+          </div>
+          <div class="risk-score score-red">72</div>
+        </div>
+        <div class="risk-patient">
+          <div class="risk-avatar">LM</div>
+          <div class="risk-info">
+            <div class="risk-name">Lisa Martinez</div>
+            <div class="risk-vitals">Temp: 39.2°C · Pain: 8/10</div>
+            <div class="risk-time">Waiting: 25 min</div>
+          </div>
+          <div class="risk-score score-amber">61</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// Tab filtering
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const dept = tab.dataset.dept;
+    document.querySelectorAll('#queueBody tr').forEach(row => {
+      row.style.display = (dept === 'all' || row.dataset.dept === dept) ? '' : 'none';
+    });
+  });
+});
+
+// Toggle switches
+document.querySelectorAll('.toggle-track').forEach(toggle => {
+  toggle.addEventListener('click', () => toggle.classList.toggle('off'));
+});
+
+// Refresh animation
+document.querySelectorAll('#refreshBtn, #tableRefreshBtn, #deptRefreshBtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const svg = btn.querySelector('svg');
+    if (svg) { svg.style.transition = 'transform 0.5s'; svg.style.transform = 'rotate(360deg)'; setTimeout(() => { svg.style.transform = ''; }, 500); }
+    const now = new Date().toLocaleTimeString();
+    document.getElementById('lastUpdatedText').textContent = 'Updated ' + now;
+    document.getElementById('tableLastUpdate').textContent = now;
+  });
+});
+
+// Auto-refresh timer
+let refreshTimer = null;
+function startAutoRefresh() {
+  const interval = parseInt(document.getElementById('refreshInterval').value) * 1000;
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    const now = new Date().toLocaleTimeString();
+    document.getElementById('lastUpdatedText').textContent = 'Updated ' + now;
+    document.getElementById('tableLastUpdate').textContent = now;
+  }, interval);
+}
+startAutoRefresh();
+document.getElementById('refreshInterval').addEventListener('change', startAutoRefresh);
+
+// Row click highlight
+document.querySelectorAll('#queueBody tr').forEach(row => {
+  row.style.cursor = 'pointer';
+  row.addEventListener('click', () => {
+    document.querySelectorAll('#queueBody tr').forEach(r => r.style.background = '');
+    row.style.background = 'rgba(59,130,246,0.06)';
+  });
+});
+</script>
+</body>
+</html>

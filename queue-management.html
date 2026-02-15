@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedTriage - Queue Management</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; color: #1a1a2e; display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; padding: 0; min-height: 100vh; position: fixed; top: 0; left: 0; z-index: 10; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 18px 18px; border-bottom: 1px solid #f0f0f0; }
+  .sidebar-logo .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, #2563eb, #06b6d4); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 18px; }
+  .sidebar-logo .logo-text { font-size: 17px; font-weight: 700; color: #1a1a2e; }
+  .sidebar-logo .logo-sub { font-size: 10px; color: #94a3b8; letter-spacing: 1.5px; text-transform: uppercase; }
+  .sidebar-nav { list-style: none; padding: 12px 10px; flex: 1; }
+  .sidebar-nav li { margin-bottom: 2px; }
+  .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-radius: 10px; color: #64748b; text-decoration: none; font-size: 14.5px; font-weight: 500; transition: all 0.15s; }
+  .sidebar-nav a:hover { background: #f1f5f9; color: #2563eb; }
+  .sidebar-nav a.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+  .sidebar-nav a .nav-icon { width: 20px; text-align: center; font-size: 16px; }
+  .sidebar-bottom { padding: 16px 18px; border-top: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #22c55e; }
+  .sidebar-bottom .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; }
+
+  /* Main */
+  .main { flex: 1; margin-left: 220px; display: flex; flex-direction: column; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 32px 0 32px; }
+  .topbar-left h1 { font-size: 26px; font-weight: 700; color: #1a1a2e; }
+  .topbar-left p { font-size: 14px; color: #64748b; margin-top: 2px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #64748b; }
+  .topbar-right .updated { color: #94a3b8; }
+  .auto-refresh-toggle { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #64748b; }
+  .toggle-switch { width: 40px; height: 22px; background: #2563eb; border-radius: 12px; position: relative; cursor: pointer; }
+  .toggle-switch .knob { width: 18px; height: 18px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+  .refresh-btn-top { padding: 6px 18px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; color: #1a1a2e; font-size: 13px; cursor: pointer; font-weight: 500; }
+  .refresh-btn-top:hover { background: #f1f5f9; }
+
+  /* Content area */
+  .content-area { display: flex; gap: 24px; padding: 18px 32px 0 32px; flex: 1; }
+  .content-main { flex: 1; min-width: 0; }
+  .content-side { width: 300px; min-width: 280px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* Stats Cards */
+  .stats-row { display: flex; gap: 18px; margin-bottom: 18px; }
+  .stat-card { flex: 1; background: #fff; border-radius: 14px; padding: 18px 22px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
+  .stat-card .stat-info { flex: 1; }
+  .stat-card .stat-label { font-size: 13px; color: #64748b; font-weight: 500; }
+  .stat-card .stat-value { font-size: 32px; font-weight: 700; color: #1a1a2e; }
+  .stat-card .stat-sub { font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
+  .stat-card .stat-chart { width: 70px; height: 45px; }
+  .stat-card.high-risk .stat-label { color: #ef4444; }
+  .stat-card.high-risk .stat-value { color: #ef4444; }
+  .stat-card.wait-time .stat-value { color: #1a1a2e; }
+
+  /* Mini sparkline SVGs */
+  .sparkline-blue { color: #2563eb; }
+  .sparkline-red { color: #ef4444; }
+  .sparkline-gray { color: #94a3b8; }
+
+  /* Active Patient Queue */
+  .queue-section { background: #fff; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; margin-bottom: 18px; }
+  .queue-header { padding: 18px 22px 0; }
+  .queue-header h2 { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+  .queue-tabs { display: flex; gap: 0; border-bottom: none; margin-bottom: 0; }
+  .queue-tab { padding: 8px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: #64748b; background: #f1f5f9; cursor: pointer; border: none; margin-right: 6px; transition: all 0.15s; }
+  .queue-tab.active { background: #2563eb; color: #fff; }
+  .queue-tab:hover:not(.active) { background: #e2e8f0; }
+
+  /* Table */
+  .queue-table { width: 100%; border-collapse: collapse; }
+  .queue-table thead th { text-align: left; padding: 12px 16px; font-size: 12.5px; color: #94a3b8; font-weight: 600; border-bottom: 1px solid #f0f0f0; text-transform: none; }
+  .queue-table tbody tr { border-bottom: 1px solid #f5f5f5; transition: background 0.1s; }
+  .queue-table tbody tr:hover { background: #f8fafc; }
+  .queue-table tbody td { padding: 12px 16px; font-size: 14px; color: #1a1a2e; vertical-align: middle; }
+  .patient-id-cell { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .patient-avatar { width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #64748b; overflow: hidden; }
+  .patient-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+  /* Risk badges */
+  .badge { padding: 4px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+  .badge-high { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+  .badge-medium { background: #fffbeb; color: #f59e0b; border: 1px solid #fde68a; }
+  .badge-low { background: #f0fdf4; color: #22c55e; border: 1px solid #bbf7d0; }
+  .badge-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .badge-high .badge-dot { background: #ef4444; }
+  .badge-medium .badge-dot { background: #f59e0b; }
+  .badge-low .badge-dot { background: #22c55e; }
+
+  /* Status badges */
+  .status-badge { padding: 4px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600; }
+  .status-next { background: #2563eb; color: #fff; }
+  .status-waiting { background: #f0fdf4; color: #22c55e; border: 1px solid #bbf7d0; }
+
+  /* Auto-refresh bar */
+  .auto-refresh-bar { display: flex; align-items: center; gap: 16px; padding: 12px 22px; background: #f8fafc; border-top: 1px solid #f0f0f0; border-radius: 0 0 14px 14px; font-size: 13px; color: #64748b; flex-wrap: wrap; }
+  .auto-refresh-bar .toggle-label { display: flex; align-items: center; gap: 8px; }
+  .auto-refresh-bar .toggle-sm { width: 36px; height: 20px; background: #2563eb; border-radius: 10px; position: relative; cursor: pointer; display: inline-block; }
+  .auto-refresh-bar .toggle-sm .knob { width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+  .auto-refresh-bar select { border: 1px solid #e0e0e0; border-radius: 6px; padding: 4px 8px; font-size: 13px; background: #fff; }
+  .refresh-btn-sm { padding: 5px 16px; border: 1px solid #e0e0e0; border-radius: 7px; background: #fff; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .refresh-btn-sm:hover { background: #f1f5f9; }
+
+  /* Bottom Section */
+  .bottom-section { display: flex; gap: 18px; padding: 0 32px 24px; }
+  .bottom-card { background: #fff; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
+  .bottom-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+
+  /* Queue Metrics */
+  .queue-metrics { flex: 1; }
+  .metric-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+  .metric-row .metric-label { color: #64748b; }
+  .metric-row .metric-val { font-weight: 700; color: #1a1a2e; display: flex; align-items: center; gap: 8px; }
+  .metric-pct { font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+  .pct-red { background: #fef2f2; color: #ef4444; }
+  .pct-green { background: #f0fdf4; color: #22c55e; }
+  .legend { display: flex; gap: 16px; margin-top: 14px; font-size: 13px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; color: #64748b; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Last Update */
+  .last-update { flex: 1.2; }
+  .last-update-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .last-update-header select { border: 1px solid #e0e0e0; border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+  .refresh-btn-green { padding: 6px 20px; background: #22c55e; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .refresh-btn-green:hover { background: #16a34a; }
+  .avg-wait-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 10px; }
+  .dept-wait-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13px; color: #64748b; }
+  .dept-wait-row .dept-name { min-width: 80px; }
+  .dept-arrow { color: #94a3b8; }
+  .wait-val { font-weight: 600; color: #1a1a2e; }
+
+  /* Right Side Panel */
+  .summary-card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
+  .summary-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+  .patient-summary { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #f0f0f0; }
+  .patient-summary-avatar { width: 48px; height: 48px; border-radius: 50%; background: #e2e8f0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .patient-summary-info { font-size: 13px; color: #64748b; }
+  .patient-summary-info .name { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+  .summary-details { font-size: 13.5px; color: #64748b; }
+  .summary-details .row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .summary-details .row .label { color: #94a3b8; }
+  .summary-details .row .value { font-weight: 600; color: #1a1a2e; }
+  .summary-details .row .value.high { color: #ef4444; }
+
+  /* Wait Time Forecast */
+  .forecast-card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
+  .forecast-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+  .forecast-chart { width: 100%; height: 100px; margin-bottom: 10px; }
+  .alert-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: #92400e; }
+  .alert-icon { font-size: 16px; }
+
+  /* Potential High Risk */
+  .high-risk-card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
+  .high-risk-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .risk-patient { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #f5f5f5; }
+  .risk-patient:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .risk-avatar { width: 42px; height: 42px; border-radius: 50%; background: #e2e8f0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .risk-info { flex: 1; }
+  .risk-info .name { font-weight: 600; font-size: 14px; color: #1a1a2e; }
+  .risk-info .vitals { font-size: 12px; color: #64748b; }
+  .risk-info .time { font-size: 12px; color: #94a3b8; }
+  .risk-score { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
+  .score-green { background: #22c55e; }
+  .score-red { background: #ef4444; }
+
+  /* Filter icon */
+  .filter-icon { cursor: pointer; color: #94a3b8; }
+  .queue-table thead th.sortable { cursor: pointer; }
+  .queue-table thead th.sortable:hover { color: #2563eb; }
+
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .content-area { flex-direction: column; }
+    .content-side { width: 100%; flex-direction: row; flex-wrap: wrap; }
+    .bottom-section { flex-direction: column; }
+  }
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .stats-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">M</div>
+    <div>
+      <div class="logo-text">MedTriage</div>
+      <div class="logo-sub">AI SYSTEM</div>
+    </div>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="#"><span class="nav-icon">📊</span> Dashboard</a></li>
+    <li><a href="#"><span class="nav-icon">🩺</span> Patient Assessment</a></li>
+    <li><a href="#"><span class="nav-icon">📈</span> Analytics</a></li>
+    <li><a href="#" class="active"><span class="nav-icon">☑️</span> Queue Management</a></li>
+    <li><a href="#"><span class="nav-icon">🕓</span> History</a></li>
+  </ul>
+  <div class="sidebar-bottom">
+    <span class="dot"></span> AI Model Active
+  </div>
+</aside>
+
+<!-- Main Content -->
+<div class="main">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Queue Management</h1>
+      <p>Real-time hospital queue and patient flow optimization</p>
+    </div>
+    <div class="topbar-right">
+      <span class="updated">Updated Just Now</span>
+      <div class="auto-refresh-toggle">
+        <span>Auto-Refresh</span>
+        <div class="toggle-switch"><div class="knob"></div></div>
+      </div>
+      <button class="refresh-btn-top">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <!-- Left Content -->
+    <div class="content-main">
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Total Patients</div>
+            <div class="stat-value">20</div>
+          </div>
+          <div class="stat-chart">
+            <svg viewBox="0 0 80 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 35 Q15 30 20 25 T35 20 Q45 18 50 22 T65 15 Q72 12 75 10" stroke="#2563eb" stroke-width="2" fill="none"/>
+              <path d="M5 35 Q15 30 20 25 T35 20 Q45 18 50 22 T65 15 Q72 12 75 10 L75 45 L5 45Z" fill="url(#blueGrad)" opacity="0.15"/>
+              <defs><linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-card high-risk">
+          <div class="stat-info">
+            <div class="stat-label">High Risk</div>
+            <div class="stat-value">6 <span style="font-size:13px;color:#94a3b8;font-weight:400">(↑)</span></div>
+          </div>
+          <div class="stat-chart">
+            <svg viewBox="0 0 80 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 30 Q15 28 20 32 T35 25 Q45 20 55 18 T75 10" stroke="#ef4444" stroke-width="2" fill="none"/>
+              <path d="M5 30 Q15 28 20 32 T35 25 Q45 20 55 18 T75 10 L75 45 L5 45Z" fill="url(#redGrad)" opacity="0.15"/>
+              <defs><linearGradient id="redGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#ef4444" stop-opacity="0"/></linearGradient></defs>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-card wait-time">
+          <div class="stat-info">
+            <div class="stat-label">Average Wait Time</div>
+            <div class="stat-value">27 <span style="font-size:16px;font-weight:400;color:#64748b">min</span></div>
+          </div>
+          <div class="stat-chart">
+            <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="25" cy="25" r="20" stroke="#e2e8f0" stroke-width="5" fill="none"/>
+              <circle cx="25" cy="25" r="20" stroke="#2563eb" stroke-width="5" fill="none" stroke-dasharray="90 126" stroke-dashoffset="0" transform="rotate(-90 25 25)"/>
+              <text x="25" y="29" text-anchor="middle" font-size="10" fill="#2563eb" font-weight="600">⏱</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Patient Queue -->
+      <div class="queue-section">
+        <div class="queue-header">
+          <h2>Active Patient Queue</h2>
+          <div class="queue-tabs">
+            <button class="queue-tab active">Emergency</button>
+            <button class="queue-tab">Cardiology</button>
+            <button class="queue-tab">Pulmonary</button>
+            <button class="queue-tab">Internal Med</button>
+            <button class="queue-tab">Internal Medicine</button>
+          </div>
+        </div>
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Queue</th>
+              <th>Patient ID</th>
+              <th class="sortable">Risk Level <span class="filter-icon">⇅</span></th>
+              <th>Arrival Mode</th>
+              <th>Department</th>
+              <th>Wait Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><div class="patient-id-cell"><div class="patient-avatar">👤</div> PAT-2421</div></td>
+              <td><span class="badge badge-high"><span class="badge-dot"></span> High</span></td>
+              <td>Ambulance</td>
+              <td>Emergency</td>
+              <td>2 min</td>
+              <td><span class="status-badge status-next">Next</span></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><div class="patient-id-cell"><div class="patient-avatar">👤</div> PAT-2414</div></td>
+              <td><span class="badge badge-medium"><span class="badge-dot"></span> Medium</span></td>
+              <td>Wheelchair</td>
+              <td>Cardiology</td>
+              <td>15 min</td>
+              <td><span class="status-badge status-waiting">Waiting</span></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><div class="patient-id-cell"><div class="patient-avatar">👤</div> PAT-2413</div></td>
+              <td><span class="badge badge-high"><span class="badge-dot"></span> High</span></td>
+              <td>Ambulance</td>
+              <td>Pulmonology</td>
+              <td>4 min</td>
+              <td><span class="status-badge status-waiting">Waiting</span></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><div class="patient-id-cell"><div class="patient-avatar">👤</div> PAT-2411</div></td>
+              <td><span class="badge badge-medium"><span class="badge-dot"></span> Medium</span></td>
+              <td>Walk-in</td>
+              <td>Internal Med</td>
+              <td>20 min</td>
+              <td><span class="status-badge status-waiting">Waiting</span></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><div class="patient-id-cell"><div class="patient-avatar">👤</div> PAT-2411</div></td>
+              <td><span class="badge badge-low"><span class="badge-dot"></span> Low</span></td>
+              <td>Ambulance</td>
+              <td>Walk-in</td>
+              <td>13 min</td>
+              <td><span class="status-badge status-waiting">Waiting</span></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><div class="patient-id-cell"><div class="patient-avatar">👤</div> PAT-2416</div></td>
+              <td><span class="badge badge-low"><span class="badge-dot"></span> Low</span></td>
+              <td>Walk-in</td>
+              <td>H&G</td>
+              <td>18 min</td>
+              <td><span class="status-badge status-waiting">Waiting</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="auto-refresh-bar">
+          <div class="toggle-label">
+            <div class="toggle-sm"><div class="knob"></div></div>
+            Auto-Refresh
+          </div>
+          <span>• Last updated: <strong>Just Now</strong></span>
+          <span style="margin-left:auto">↻ Refresh Every</span>
+          <select><option>30</option><option>15</option><option>60</option></select>
+          <button class="refresh-btn-sm">↻ Refresh</button>
+        </div>
+      </div>
+
+      <!-- Bottom Section -->
+      <div style="display:flex;gap:18px;margin-bottom:24px;">
+        <!-- Queue Metrics -->
+        <div class="bottom-card queue-metrics">
+          <h3>Queue Metrics</h3>
+          <div class="metric-row">
+            <span class="metric-label">Total Patients:</span>
+            <span class="metric-val">20 <span class="metric-pct pct-red">🔴 88%</span></span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">High Risk Patients:</span>
+            <span class="metric-val">6 <span style="font-size:12px;color:#64748b">(30%)</span> <span class="metric-pct pct-green">●</span></span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Avg Wait Time:</span>
+            <span class="metric-val">27 min</span>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> High</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Medium</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Low</div>
+          </div>
+        </div>
+
+        <!-- Last Update -->
+        <div class="bottom-card last-update">
+          <h3>Last Update</h3>
+          <div class="last-update-header">
+            <span style="font-size:13px;color:#64748b">Refresh | Status:</span>
+            <select><option>32 min</option></select>
+            <button class="refresh-btn-green">↻ Refresh</button>
+          </div>
+          <div class="avg-wait-title">Avg Wait by Department</div>
+          <div class="dept-wait-row">
+            <span class="dept-name">Emergency</span>
+            <span class="dept-arrow">›</span>
+            <span>Cardiology</span>
+            <span class="dept-arrow">›</span>
+            <span>Internal</span>
+            <span class="dept-arrow">›</span>
+            <span class="wait-val">32 min</span>
+          </div>
+          <div class="dept-wait-row">
+            <span class="dept-name">Cardiology</span>
+            <span class="dept-arrow">›</span>
+            <span>Pulmonology</span>
+            <span class="dept-arrow">›</span>
+            <span>Internal</span>
+            <span class="dept-arrow">›</span>
+            <span class="wait-val">24 min</span>
+          </div>
+          <div class="dept-wait-row">
+            <span class="dept-name">Internal M...</span>
+            <span class="dept-arrow">›</span>
+            <span>Medicine</span>
+            <span class="dept-arrow">›</span>
+            <span>Internal</span>
+            <span class="dept-arrow">›</span>
+            <span class="wait-val">20 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side Panel -->
+    <div class="content-side">
+      <!-- Summary -->
+      <div class="summary-card">
+        <h3>Summary</h3>
+        <div class="patient-summary">
+          <div class="patient-summary-avatar">👤</div>
+          <div class="patient-summary-info">
+            <div class="name">Patient</div>
+            <div>B11-1n</div>
+          </div>
+        </div>
+        <div class="summary-details">
+          <div class="row"><span class="label">Patient:</span><span class="value">PAT-2421</span></div>
+          <div class="row"><span class="label">Risk Level:</span><span class="value high">🔴 High</span></div>
+          <div class="row"><span class="label">Department:</span><span class="value">Emergency</span></div>
+          <div class="row"><span class="label">Wait Time:</span><span class="value">2 min</span></div>
+        </div>
+      </div>
+
+      <!-- Wait Time Forecast -->
+      <div class="forecast-card">
+        <h3>Wait Time Forecast</h3>
+        <div class="forecast-chart">
+          <svg viewBox="0 0 260 100" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%">
+            <!-- Grid lines -->
+            <line x1="30" y1="15" x2="250" y2="15" stroke="#f0f0f0" stroke-width="0.5"/>
+            <line x1="30" y1="45" x2="250" y2="45" stroke="#f0f0f0" stroke-width="0.5"/>
+            <line x1="30" y1="75" x2="250" y2="75" stroke="#f0f0f0" stroke-width="0.5"/>
+            <!-- Y labels -->
+            <text x="5" y="18" font-size="8" fill="#94a3b8">10 min</text>
+            <text x="5" y="48" font-size="8" fill="#94a3b8">5 min</text>
+            <!-- X labels -->
+            <text x="60" y="95" font-size="8" fill="#94a3b8">15 min</text>
+            <text x="130" y="95" font-size="8" fill="#94a3b8">25 min</text>
+            <text x="210" y="95" font-size="8" fill="#94a3b8">30 min</text>
+            <!-- Line -->
+            <path d="M40 65 Q80 60 100 55 Q130 50 160 45 Q190 35 220 20 Q235 14 245 10" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M40 65 Q80 60 100 55 Q130 50 160 45 Q190 35 220 20 Q235 14 245 10 L245 80 L40 80Z" fill="url(#forecastGrad)" opacity="0.12"/>
+            <!-- Dots -->
+            <circle cx="100" cy="55" r="3" fill="#ef4444"/>
+            <circle cx="160" cy="45" r="3" fill="#ef4444"/>
+            <circle cx="220" cy="20" r="3" fill="#ef4444"/>
+            <defs><linearGradient id="forecastGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#ef4444" stop-opacity="0"/></linearGradient></defs>
+          </svg>
+        </div>
+        <div class="alert-box">
+          <span class="alert-icon">⚠️</span>
+          <span>High congestion likely in 30 min. Alert staff to prepare.</span>
+        </div>
+      </div>
+
+      <!-- Potential High Risk Patients -->
+      <div class="high-risk-card">
+        <h3>Potential High Risk Patients</h3>
+        <div class="risk-patient">
+          <div class="risk-avatar">👩</div>
+          <div class="risk-info">
+            <div class="name">Jane Foster</div>
+            <div class="vitals">CQ 98% &nbsp; 132 Bbpm</div>
+            <div class="time">Time Waiting: 18 min</div>
+          </div>
+          <div class="risk-score score-green">52</div>
+        </div>
+        <div class="risk-patient">
+          <div class="risk-avatar">👨</div>
+          <div class="risk-info">
+            <div class="name">Daniel Reed</div>
+            <div class="vitals">HR: 124 bpm &nbsp; 176/99mmHg</div>
+            <div class="time">Time Waiting: 22 min</div>
+          </div>
+          <div class="risk-score score-red">63</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.queue-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.queue-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // Refresh button animation
+  document.querySelectorAll('.refresh-btn-top, .refresh-btn-sm, .refresh-btn-green').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.style.transform = 'rotate(360deg)';
+      btn.style.transition = 'transform 0.5s';
+      setTimeout(() => { btn.style.transform = ''; }, 500);
+    });
+  });
+</script>
+</body>
+</html>
