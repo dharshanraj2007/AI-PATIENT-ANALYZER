@@ -1298,7 +1298,66 @@ body {
 
 .form-group textarea {
     resize: vertical;
-    min-height: 72px;
+    min-height: 80px;
+}
+
+/* Voice Input Button */
+.notes-container {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+}
+
+.notes-container textarea {
+    flex: 1;
+    padding-right: 50px;
+}
+
+.voice-btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    transition: all var(--transition-fast);
+    color: var(--text-secondary);
+}
+
+.voice-btn:hover {
+    background: var(--bg-input);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    transform: scale(1.05);
+}
+
+.voice-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.voice-btn.listening {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: var(--risk-high);
+    animation: pulse-mic 1.5s infinite;
+}
+
+.voice-btn.listening svg {
+    stroke: var(--risk-high);
+}
+
+@keyframes pulse-mic {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+    }
 }
 
 .form-group select {

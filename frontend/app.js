@@ -129,21 +129,21 @@ async function fetchQueueInsights() {
     }
 
     badge.textContent = isLive ? '● Live' : '● Mock';
-    badge.className   = 'qi-source ' + (isLive ? 'live' : 'mock');
+    badge.className = 'qi-source ' + (isLive ? 'live' : 'mock');
 
     renderQueueInsights(stats);
 }
 
 function renderQueueInsights(stats) {
-    const total    = stats.total_patients ?? 0;
-    const highCnt  = stats.high_risk_count ?? 0;
-    const avgWait  = stats.average_wait_time ?? 0;
-    const highPct  = total > 0 ? Math.round((highCnt / total) * 100) : 0;
-    const depts    = stats.patients_per_department ?? {};
+    const total = stats.total_patients ?? 0;
+    const highCnt = stats.high_risk_count ?? 0;
+    const avgWait = stats.average_wait_time ?? 0;
+    const highPct = total > 0 ? Math.round((highCnt / total) * 100) : 0;
+    const depts = stats.patients_per_department ?? {};
 
     document.getElementById('qiQueueSize').textContent = total;
-    document.getElementById('qiAvgWait').textContent   = avgWait + ' min';
-    document.getElementById('qiHighPct').textContent    = highPct + '%';
+    document.getElementById('qiAvgWait').textContent = avgWait + ' min';
+    document.getElementById('qiHighPct').textContent = highPct + '%';
 
     // Extra metrics
     const throughputEl = document.getElementById('qiThroughput');
@@ -151,7 +151,7 @@ function renderQueueInsights(stats) {
     const peakEl = document.getElementById('qiPeakHour');
     if (peakEl) peakEl.textContent = '10-11 AM';
     const tsEl = document.getElementById('qiTimestamp');
-    if (tsEl) tsEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    if (tsEl) tsEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     // Risk distribution bars
     const medCnt = Math.max(0, total - highCnt);
@@ -165,23 +165,23 @@ function renderQueueInsights(stats) {
             <div class="qi2-risk-row">
                 <div class="qi2-risk-dot" style="background:var(--risk-high);"></div>
                 <span class="qi2-risk-label">High</span>
-                <div class="qi2-risk-track"><div class="qi2-risk-fill" style="width:${(highCnt/maxVal)*100}%;background:var(--risk-high);"></div></div>
+                <div class="qi2-risk-track"><div class="qi2-risk-fill" style="width:${(highCnt / maxVal) * 100}%;background:var(--risk-high);"></div></div>
                 <span class="qi2-risk-count">${highCnt}</span>
-                <span class="qi2-risk-pct">${total>0?Math.round(highCnt/total*100):0}%</span>
+                <span class="qi2-risk-pct">${total > 0 ? Math.round(highCnt / total * 100) : 0}%</span>
             </div>
             <div class="qi2-risk-row">
                 <div class="qi2-risk-dot" style="background:var(--risk-medium);"></div>
                 <span class="qi2-risk-label">Medium</span>
-                <div class="qi2-risk-track"><div class="qi2-risk-fill" style="width:${(medOnly/maxVal)*100}%;background:var(--risk-medium);"></div></div>
+                <div class="qi2-risk-track"><div class="qi2-risk-fill" style="width:${(medOnly / maxVal) * 100}%;background:var(--risk-medium);"></div></div>
                 <span class="qi2-risk-count">${medOnly}</span>
-                <span class="qi2-risk-pct">${total>0?Math.round(medOnly/total*100):0}%</span>
+                <span class="qi2-risk-pct">${total > 0 ? Math.round(medOnly / total * 100) : 0}%</span>
             </div>
             <div class="qi2-risk-row">
                 <div class="qi2-risk-dot" style="background:var(--risk-low);"></div>
                 <span class="qi2-risk-label">Low</span>
-                <div class="qi2-risk-track"><div class="qi2-risk-fill" style="width:${(lowCnt/maxVal)*100}%;background:var(--risk-low);"></div></div>
+                <div class="qi2-risk-track"><div class="qi2-risk-fill" style="width:${(lowCnt / maxVal) * 100}%;background:var(--risk-low);"></div></div>
                 <span class="qi2-risk-count">${lowCnt}</span>
-                <span class="qi2-risk-pct">${total>0?Math.round(lowCnt/total*100):0}%</span>
+                <span class="qi2-risk-pct">${total > 0 ? Math.round(lowCnt / total * 100) : 0}%</span>
             </div>
         `;
     }
@@ -189,14 +189,14 @@ function renderQueueInsights(stats) {
     // Department breakdown
     const deptEl = document.getElementById('qiDeptBreakdown');
     if (deptEl) {
-        const deptEntries = Object.entries(depts).sort((a,b) => b[1] - a[1]);
+        const deptEntries = Object.entries(depts).sort((a, b) => b[1] - a[1]);
         const maxDept = deptEntries.length > 0 ? deptEntries[0][1] : 1;
-        const deptColors = ['#3b82f6','#8b5cf6','#06b6d4','#f59e0b','#10b981','#ef4444'];
+        const deptColors = ['#3b82f6', '#8b5cf6', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'];
         deptEl.innerHTML = deptEntries.map((d, i) => `
             <div class="qi2-dept-row">
                 <div class="qi2-dept-badge" style="background:${deptColors[i % deptColors.length]}12;color:${deptColors[i % deptColors.length]};">${d[1]}</div>
                 <span class="qi2-dept-name">${d[0]}</span>
-                <div class="qi2-dept-track"><div class="qi2-dept-fill" style="width:${(d[1]/maxDept)*100}%;background:${deptColors[i % deptColors.length]};"></div></div>
+                <div class="qi2-dept-track"><div class="qi2-dept-fill" style="width:${(d[1] / maxDept) * 100}%;background:${deptColors[i % deptColors.length]};"></div></div>
             </div>
         `).join('');
     }
@@ -467,7 +467,7 @@ function renderAnalyticsCharts(data) {
         // Render clinical insights
         const insightsEl = document.getElementById('crfInsights');
         if (insightsEl) {
-            const topFactors = correlations.filter(c => c.value >= 74).sort((a,b) => b.value - a.value);
+            const topFactors = correlations.filter(c => c.value >= 74).sort((a, b) => b.value - a.value);
             insightsEl.innerHTML = `
                 <div class="crf-insight-card crf-insight-alert">
                     <div class="crf-insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
@@ -770,13 +770,7 @@ function initEhrUpload() {
                     }
                 }
 
-                if (vitals.oxygen_saturation) {
-                    const o2Match = vitals.oxygen_saturation.match(/(\d+)/);
-                    if (o2Match) {
-                        const o2El = document.getElementById('oxygen_saturation');
-                        if (o2El) o2El.value = o2Match[1];
-                    }
-                }
+                // oxygen_saturation removed from schema
 
                 if (vitals.temperature) {
                     const tempMatch = vitals.temperature.match(/(\d+\.?\d*)/);
@@ -788,7 +782,7 @@ function initEhrUpload() {
 
                 // Display summary in Analytics page
                 console.log('EHR Summary:', summary);
-                msg.innerHTML = `✓ Extracted medical data from PDF<br><small>Patient: ${demographics.name || 'Unknown'} | Diagnosis: ${summary.diagnosis || 'N/A'}</small>`;
+                msg.innerHTML = `✓ Extracted medical data from PDF<br><small>Patient: ${demographics.name || 'Unknown'} | Confidence: ${summary.confidence_score || 0}%</small>`;
 
                 // Render in Analytics page
                 renderEHRAnalytics(summary);
@@ -827,8 +821,9 @@ function renderEHRAnalytics(summary) {
 
     const demographics = summary.patient_demographics || {};
     const vitals = summary.vital_signs || {};
-    const medications = summary.medications || [];
-    const allergies = summary.allergies || [];
+    const allergies = summary.allergies || "Not specified";
+    const notes = summary.notes || "Not specified";
+    const confidence = summary.confidence_score || 0;
 
     container.innerHTML = `
         <div class="ehr-data-grid">
@@ -850,12 +845,12 @@ function renderEHRAnalytics(summary) {
                 <p>${summary.chief_complaint || 'Not specified'}</p>
             </div>
 
-            <div class="ehr-data-card" style="border-color: var(--risk-high);">
-                <h5 style="color: var(--risk-high);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:6px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    Diagnosis
+            <div class="ehr-data-card" style="border-color: var(--accent-blue);">
+                <h5 style="color: var(--accent-blue);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:6px;"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Confidence Score
                 </h5>
-                <p>${summary.diagnosis || 'Not specified'}</p>
+                <p style="font-size:1.5rem;font-weight:700;color:${confidence >= 70 ? 'var(--risk-low)' : confidence >= 40 ? 'var(--risk-medium)' : 'var(--risk-high)'}">${confidence}%</p>
             </div>
 
             <div class="ehr-data-card" style="border-color: var(--accent-purple);">
@@ -867,38 +862,27 @@ function renderEHRAnalytics(summary) {
                     <div style="padding:8px 10px;background:rgba(124,58,237,0.05);border-radius:8px;"><span style="font-size:0.72rem;color:var(--text-muted);display:block;">Temperature</span><span style="font-weight:600;font-size:0.9rem;">${vitals.temperature || 'N/A'}</span></div>
                     <div style="padding:8px 10px;background:rgba(124,58,237,0.05);border-radius:8px;"><span style="font-size:0.72rem;color:var(--text-muted);display:block;">Blood Pressure</span><span style="font-weight:600;font-size:0.9rem;">${vitals.blood_pressure || 'N/A'}</span></div>
                     <div style="padding:8px 10px;background:rgba(124,58,237,0.05);border-radius:8px;"><span style="font-size:0.72rem;color:var(--text-muted);display:block;">Heart Rate</span><span style="font-weight:600;font-size:0.9rem;">${vitals.heart_rate || 'N/A'}</span></div>
-                    <div style="padding:8px 10px;background:rgba(124,58,237,0.05);border-radius:8px;"><span style="font-size:0.72rem;color:var(--text-muted);display:block;">O2 Saturation</span><span style="font-weight:600;font-size:0.9rem;">${vitals.oxygen_saturation || 'N/A'}</span></div>
-                    <div style="padding:8px 10px;background:rgba(124,58,237,0.05);border-radius:8px;grid-column:1/-1;text-align:center;"><span style="font-size:0.72rem;color:var(--text-muted);display:block;">Respiratory Rate</span><span style="font-weight:600;font-size:0.9rem;">${vitals.respiratory_rate || 'N/A'}</span></div>
+
                 </div>
             </div>
 
-            <div class="ehr-data-card" style="border-color: var(--risk-low);">
-                <h5 style="color: var(--risk-low);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:6px;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                    Medications
-                </h5>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
-                    ${medications.length > 0 ? medications.map(m => `<span style="padding:4px 12px;background:rgba(5,150,105,0.08);color:var(--risk-low);border-radius:20px;font-size:0.78rem;font-weight:500;">${m}</span>`).join('') : '<p style="color:var(--text-muted);font-size:0.85rem;">None listed</p>'}
-                </div>
-            </div>
+
 
             <div class="ehr-data-card" style="border-color: var(--risk-high);">
                 <h5 style="color: var(--risk-high);">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:6px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     Allergies
                 </h5>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
-                    ${allergies.length > 0 ? allergies.map(a => `<span style="padding:4px 12px;background:rgba(220,38,38,0.08);color:var(--risk-high);border-radius:20px;font-size:0.78rem;font-weight:500;">${a}</span>`).join('') : '<p style="color:var(--text-muted);font-size:0.85rem;">None listed</p>'}
-                </div>
+                <p>${allergies}</p>
             </div>
 
-            ${summary.additional_notes ? `
+            ${notes !== 'Not specified' ? `
             <div class="ehr-data-card" style="border-color: var(--text-muted); grid-column: 1 / -1;">
                 <h5 style="color: var(--text-secondary);">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    Additional Notes
+                    Notes
                 </h5>
-                <p style="font-size:0.85rem;">${summary.additional_notes}</p>
+                <p style="line-height:1.6;color:var(--text-secondary);">${notes}</p>
             </div>
             ` : ''}
         </div>
