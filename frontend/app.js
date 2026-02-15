@@ -661,11 +661,20 @@ function renderEHRAnalytics(summary) {
 
     const demographics = summary.patient_demographics || {};
     const vitals = summary.vital_signs || {};
-    const medications = summary.medications || [];
-    const allergies = summary.allergies || [];
+    const allergies = summary.allergies || "Not specified";
+    const notes = summary.notes || "Not specified";
+    const confidence = summary.confidence_score || 0;
 
     container.innerHTML = `
         <div style="padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--border-color);">
+                <h4 style="margin: 0; color: var(--text-primary);">Extracted EHR Summary</h4>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 0.85em; color: var(--text-muted);">Confidence:</span>
+                    <span style="font-weight: 600; color: ${confidence >= 70 ? 'var(--risk-low)' : confidence >= 40 ? 'var(--risk-medium)' : 'var(--risk-high)'};">${confidence}%</span>
+                </div>
+            </div>
+            
             <div style="display: grid; gap: 1rem;">
                 <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--accent-blue);">
                     <strong style="color: var(--accent-blue);">Patient Information</strong>
@@ -679,36 +688,24 @@ function renderEHRAnalytics(summary) {
                     <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${summary.chief_complaint || 'Not specified'}</p>
                 </div>
                 
-                <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--risk-high);">
-                    <strong style="color: var(--risk-high);">Diagnosis</strong>
-                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${summary.diagnosis || 'Not specified'}</p>
-                </div>
-                
                 <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--accent-purple);">
                     <strong style="color: var(--accent-purple);">Vital Signs</strong>
                     <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.9em;">
                         <p style="margin: 0; color: var(--text-muted);">Temp: <span style="color: var(--text-primary);">${vitals.temperature || 'N/A'}</span></p>
                         <p style="margin: 0; color: var(--text-muted);">BP: <span style="color: var(--text-primary);">${vitals.blood_pressure || 'N/A'}</span></p>
                         <p style="margin: 0; color: var(--text-muted);">HR: <span style="color: var(--text-primary);">${vitals.heart_rate || 'N/A'}</span></p>
-                        <p style="margin: 0; color: var(--text-muted);">O2: <span style="color: var(--text-primary);">${vitals.oxygen_saturation || 'N/A'}</span></p>
-                        <p style="margin: 0; color: var(--text-muted);">RR: <span style="color: var(--text-primary);">${vitals.respiratory_rate || 'N/A'}</span></p>
                     </div>
-                </div>
-                
-                <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--risk-low);">
-                    <strong style="color: var(--risk-low);">Medications</strong>
-                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${medications.length > 0 ? medications.join(', ') : 'None listed'}</p>
                 </div>
                 
                 <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--risk-high);">
                     <strong style="color: var(--risk-high);">Allergies</strong>
-                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${allergies.length > 0 ? allergies.join(', ') : 'None listed'}</p>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary);">${allergies}</p>
                 </div>
                 
-                ${summary.additional_notes ? `
+                ${notes !== 'Not specified' ? `
                 <div style="padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--text-muted);">
-                    <strong style="color: var(--text-muted);">Additional Notes</strong>
-                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary); font-size: 0.9em;">${summary.additional_notes}</p>
+                    <strong style="color: var(--text-muted);">Notes</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-primary); font-size: 0.9em;">${notes}</p>
                 </div>
                 ` : ''}
             </div>
