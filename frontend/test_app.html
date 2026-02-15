@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedTriage AI — Complete Test Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ── Design Tokens ── */
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-input: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-purple: #7c3aed;
+            --accent-cyan: #0891b2;
+            --risk-low: #059669;
+            --risk-low-bg: rgba(5,150,105,0.08);
+            --risk-medium: #d97706;
+            --risk-medium-bg: rgba(217,119,6,0.08);
+            --risk-high: #dc2626;
+            --risk-high-bg: rgba(220,38,38,0.08);
+            --border: rgba(0,0,0,0.08);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ── Top Navigation ── */
+        .top-nav {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            padding: 0 24px;
+            display: flex; align-items: center; gap: 8px;
+            height: 60px;
+            overflow-x: auto;
+        }
+        .top-nav .logo {
+            display: flex; align-items: center; gap: 10px;
+            margin-right: 20px; flex-shrink: 0;
+        }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+        }
+        .logo-icon svg { width: 20px; height: 20px; }
+        .logo-title { font-weight: 700; font-size: 1rem; }
+        .nav-btn {
+            padding: 8px 18px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); background: var(--bg-input);
+            font-family: inherit; font-size: 0.82rem; font-weight: 600;
+            color: var(--text-secondary); cursor: pointer;
+            transition: all var(--transition-fast);
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .nav-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+        .nav-btn.active {
+            background: var(--accent-blue); color: white;
+            border-color: var(--accent-blue);
+        }
+        .api-badge {
+            margin-left: auto; flex-shrink: 0;
+            font-size: 0.72rem; font-weight: 600;
+            padding: 4px 12px; border-radius: 20px;
+        }
+        .api-badge.live { background: rgba(5,150,105,0.1); color: var(--risk-low); }
+        .api-badge.mock { background: var(--risk-medium-bg); color: var(--risk-medium); }
+
+        /* ── Layout ── */
+        .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+        .page-header { margin-bottom: 24px; }
+        .page-header h1 { font-size: 1.4rem; font-weight: 700; }
+        .page-header p { color: var(--text-muted); font-size: 0.88rem; margin-top: 4px; }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 24px;
+            box-shadow: var(--shadow-sm); margin-bottom: 20px;
+            transition: all var(--transition-normal);
+        }
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card h3 {
+            font-size: 0.95rem; font-weight: 600; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ── Stats Grid ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 20px;
+            box-shadow: var(--shadow-sm); position: relative;
+            overflow: hidden; transition: all var(--transition-normal);
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .stat-card::before {
+            content: ''; position: absolute; top:0; left:0; right:0; height: 3px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+        .stat-card.blue::before   { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+        .stat-card.green::before  { background: var(--risk-low); }
+        .stat-card.amber::before  { background: var(--risk-medium); }
+        .stat-card.red::before    { background: var(--risk-high); }
+        .stat-card.cyan::before   { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); }
+        .stat-value { font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
+        .stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+
+        /* ── Form ── */
+        .form-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .form-group label {
+            display: block; font-size: 0.8rem; font-weight: 600;
+            color: var(--text-secondary); margin-bottom: 6px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); background: var(--bg-input);
+            font-family: inherit; font-size: 0.88rem; color: var(--text-primary);
+            transition: border-color var(--transition-fast);
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--accent-blue);
+        }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 22px; border-radius: var(--radius-md);
+            font-family: inherit; font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; border: none; transition: all var(--transition-fast);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white; box-shadow: 0 4px 15px rgba(59,130,246,0.2);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.3); }
+        .btn-outline {
+            background: transparent; color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+        .btn-danger {
+            background: var(--risk-high-bg); color: var(--risk-high);
+            border: 1px solid rgba(220,38,38,0.2);
+        }
+        .btn-danger:hover { background: rgba(220,38,38,0.15); }
+
+        /* ── Result Box ── */
+        .result-box {
+            padding: 24px; border-radius: var(--radius-lg);
+            border: 1px solid var(--border); margin-top: 20px;
+        }
+        .result-box.hidden { display: none; }
+        .result-box .result-risk {
+            font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;
+        }
+        .result-box .result-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 0; border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+        .result-box .result-row:last-child { border-bottom: none; }
+        .result-label { color: var(--text-secondary); }
+        .result-val { font-weight: 700; }
+
+        /* ── Risk Badges ── */
+        .risk-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 600;
+        }
+        .risk-badge.high   { background: var(--risk-high-bg);   color: var(--risk-high); }
+        .risk-badge.medium { background: var(--risk-medium-bg); color: var(--risk-medium); }
+        .risk-badge.low    { background: var(--risk-low-bg);    color: var(--risk-low); }
+        .risk-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+        /* ── Table ── */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .data-table thead { background: var(--bg-input); }
+        .data-table th {
+            padding: 12px 16px; text-align: left; font-weight: 600;
+            font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--text-secondary);
+        }
+        .data-table td {
+            padding: 12px 16px; border-top: 1px solid var(--border);
+        }
+        .data-table tbody tr { transition: background var(--transition-fast); }
+        .data-table tbody tr:hover { background: var(--bg-card-hover); }
+
+        /* ── High-risk flash ── */
+        @keyframes highRiskFlash {
+            0%   { background: rgba(220,38,38,0.35); }
+            30%  { background: rgba(220,38,38,0.12); }
+            60%  { background: rgba(220,38,38,0.25); }
+            100% { background: transparent; }
+        }
+        .data-table tbody tr.high-risk-new {
+            animation: highRiskFlash 1.8s ease-out forwards;
+            border-left: 3px solid var(--risk-high);
+        }
+
+        /* ── Bar chart ── */
+        .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .bar-label { width: 110px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-align: right; flex-shrink:0; }
+        .bar-track { flex:1; height:10px; background: var(--border); border-radius:5px; overflow:hidden; }
+        .bar-fill { height:100%; border-radius:5px; transition: width 0.8s ease; }
+        .bar-val { width:45px; font-size:0.78rem; font-weight:700; color: var(--text-secondary); flex-shrink:0; }
+
+        /* ── Upload ── */
+        .upload-zone {
+            border: 2px dashed var(--border); border-radius: var(--radius-lg);
+            padding: 32px; text-align: center; cursor: pointer;
+            transition: all var(--transition-fast); background: var(--bg-input);
+        }
+        .upload-zone:hover { border-color: var(--accent-blue); background: rgba(59,130,246,0.04); }
+        .upload-zone svg { margin-bottom: 8px; color: var(--text-muted); }
+        .upload-zone p { font-size: 0.85rem; color: var(--text-muted); }
+        .upload-zone input[type="file"] { display: none; }
+
+        /* ── Queue ring ── */
+        .queue-position-wrap {
+            display: flex; align-items: center; gap: 32px;
+            padding: 20px; background: var(--bg-input);
+            border-radius: var(--radius-md); margin-bottom: 20px;
+        }
+        .ring-container { position: relative; width:110px; height:110px; flex-shrink:0; }
+        .ring-container svg { width:100%; height:100%; transform: rotate(-90deg); }
+        .ring-bg { fill:none; stroke: var(--border); stroke-width:10; }
+        .ring-fill { fill:none; stroke: var(--accent-blue); stroke-width:10; stroke-linecap:round; transition: stroke-dashoffset 1s ease; }
+        .ring-label {
+            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+            text-align:center;
+        }
+        .ring-value { display:block; font-size:1.6rem; font-weight:800; color: var(--accent-blue); line-height:1; }
+        .ring-text { display:block; font-size:0.65rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-top:3px; }
+
+        .detail-rows { flex:1; display:flex; flex-direction:column; gap:10px; }
+        .detail-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:0.88rem; }
+        .detail-row:last-child { border-bottom:none; }
+        .detail-key { color: var(--text-secondary); }
+        .detail-val { font-weight:700; }
+
+        /* ── History items ── */
+        .history-item {
+            background: var(--bg-card); border:1px solid var(--border);
+            border-radius: var(--radius-lg); padding:16px 20px;
+            display:flex; align-items:center; gap:16px;
+            margin-bottom: 10px; transition: all var(--transition-fast);
+            cursor: pointer;
+        }
+        .history-item:hover { transform:translateY(-1px); box-shadow: var(--shadow-sm); }
+        .history-num {
+            width:42px; height:42px; border-radius: var(--radius-md);
+            background: rgba(59,130,246,0.1); color: var(--accent-blue);
+            display:flex; align-items:center; justify-content:center;
+            font-weight:800; font-size:0.85rem; flex-shrink:0;
+        }
+        .history-info { flex:1; min-width:0; }
+        .history-title { font-weight:600; font-size:0.88rem; }
+        .history-meta { font-size:0.75rem; color: var(--text-muted); margin-top:2px; }
+        .history-badges { display:flex; gap:6px; align-items:center; flex-shrink:0; }
+        .dept-badge {
+            padding:4px 10px; border-radius: var(--radius-sm);
+            font-size:0.75rem; font-weight:500;
+            background:rgba(124,58,237,0.08); color: var(--accent-purple);
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            padding: 14px 22px; border-radius: var(--radius-md);
+            font-size: 0.85rem; font-weight: 500;
+            box-shadow: var(--shadow-md); z-index: 200;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+        }
+        .toast.info { background: var(--accent-blue); color: white; }
+        .toast.warn { background: var(--risk-medium); color: white; }
+        @keyframes toastIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(20px); } }
+
+        /* ── Empty state ── */
+        .empty-state { text-align:center; padding:48px 20px; color: var(--text-muted); }
+        .empty-state svg { margin-bottom:10px; opacity:0.4; }
+        .empty-state p { font-size:0.88rem; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .top-nav { gap: 4px; padding: 0 12px; }
+            .nav-btn { padding: 6px 12px; font-size: 0.75rem; }
+            .container { padding: 20px 14px; }
+            .stats-grid { grid-template-columns: repeat(2,1fr); }
+            .form-grid { grid-template-columns: 1fr; }
+            .queue-position-wrap { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ TOP NAV ═══════════════════════ -->
+<nav class="top-nav">
+    <div class="logo">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <span class="logo-title">MedTriage AI</span>
+    </div>
+    <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+    <button class="nav-btn" data-page="assessment">Assessment</button>
+    <button class="nav-btn" data-page="analytics">Analytics</button>
+    <button class="nav-btn" data-page="history">History</button>
+    <button class="nav-btn" data-page="queue">Queue Status</button>
+    <span class="api-badge mock" id="apiBadge">● Checking…</span>
+</nav>
+
+<div class="container">
+
+<!-- ═══════════════════════ DASHBOARD ═══════════════════════ -->
+<div class="page active" id="page-dashboard">
+    <div class="page-header">
+        <h1>Dashboard Overview</h1>
+        <p>Real-time medical triage insights and statistics</p>
+    </div>
+    <div class="stats-grid" id="dashStatsGrid">
+        <div class="stat-card blue"><div class="stat-value" id="dTotal">--</div><div class="stat-label">Total Records</div></div>
+        <div class="stat-card green"><div class="stat-value" id="dLow">--</div><div class="stat-label">Low Risk</div></div>
+        <div class="stat-card amber"><div class="stat-value" id="dMedium">--</div><div class="stat-label">Medium Risk</div></div>
+        <div class="stat-card red"><div class="stat-value" id="dHigh">--</div><div class="stat-label">High Risk</div></div>
+    </div>
+    <div class="card">
+        <h3>Risk Distribution</h3>
+        <div id="dashRiskBars"></div>
+    </div>
+    <div class="card">
+        <h3>Model Info</h3>
+        <div id="dashModelInfo" style="font-size:0.88rem; color:var(--text-secondary);">Loading…</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ ASSESSMENT ═══════════════════════ -->
+<div class="page" id="page-assessment">
+    <div class="page-header">
+        <h1>Patient Assessment</h1>
+        <p>Enter patient vitals for AI-powered risk classification</p>
+    </div>
+    <div class="card">
+        <h3>Patient Vitals</h3>
+        <form id="assessForm">
+            <div class="form-grid">
+                <div class="form-group"><label>Age</label><input type="number" id="f_age" value="55" min="0" max="120" required></div>
+                <div class="form-group"><label>Gender</label>
+                    <select id="f_gender"><option>Male</option><option>Female</option><option>Other</option></select>
+                </div>
+                <div class="form-group"><label>Heart Rate (bpm)</label><input type="number" id="f_hr" value="88" min="30" max="250" required></div>
+                <div class="form-group"><label>Systolic BP (mmHg)</label><input type="number" id="f_bp" value="140" min="60" max="250" required></div>
+                <div class="form-group"><label>Body Temperature (°C)</label><input type="number" id="f_temp" value="37.2" step="0.1" min="34" max="43" required></div>
+                <div class="form-group"><label>O₂ Saturation (%)</label><input type="number" id="f_o2" value="96" min="50" max="100" required></div>
+                <div class="form-group"><label>Pain Level (0-10)</label><input type="number" id="f_pain" value="4" min="0" max="10" required></div>
+                <div class="form-group"><label>Chronic Diseases</label><input type="number" id="f_chronic" value="1" min="0" max="10"></div>
+                <div class="form-group"><label>Arrival Mode</label>
+                    <select id="f_arrival"><option value="walk_in">Walk-in</option><option value="wheelchair">Wheelchair</option><option value="ambulance">Ambulance</option></select>
+                </div>
+                <div class="form-group" style="grid-column: 1/-1;">
+                    <label>Symptoms</label>
+                    <textarea id="f_symptoms" rows="2" placeholder="e.g. chest pain, shortness of breath">chest pain, dizziness</textarea>
+                </div>
+            </div>
+            <div style="margin-top:20px; display:flex; gap:12px;">
+                <button type="submit" class="btn btn-primary">Analyze Patient</button>
+                <button type="reset" class="btn btn-outline">Reset</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- EHR Upload -->
+    <div class="card">
+        <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            EHR Upload
+        </h3>
+        <div class="upload-zone" id="uploadZone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p>Click to upload EHR (PDF)</p>
+            <input type="file" id="ehrFile" accept=".pdf">
+        </div>
+        <div id="ehrResult" class="result-box hidden" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- Prediction Result -->
+    <div id="assessResult" class="result-box hidden card"></div>
+</div>
+
+<!-- ═══════════════════════ ANALYTICS ═══════════════════════ -->
+<div class="page" id="page-analytics">
+    <div class="page-header">
+        <h1>Analytics &amp; Insights</h1>
+        <p>Model performance and data patterns</p>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-value" id="aAccuracy">--</div><div class="stat-label">Model Accuracy</div></div>
+        <div class="stat-card cyan"><div class="stat-value" id="aSamples">--</div><div class="stat-label">Training Samples</div></div>
+        <div class="stat-card amber"><div class="stat-value" id="aFeatures">--</div><div class="stat-label">Features Used</div></div>
+    </div>
+    <div class="card">
+        <h3>Feature Importance</h3>
+        <div id="aFeatureBars"></div>
+    </div>
+    <div class="card">
+        <h3>Queue Insights</h3>
+        <div class="stats-grid" style="margin-bottom:0;">
+            <div class="stat-card blue"><div class="stat-value" id="aqSize">--</div><div class="stat-label">Current Queue Size</div></div>
+            <div class="stat-card cyan"><div class="stat-value" id="aqWait">--</div><div class="stat-label">Avg Wait Time</div></div>
+            <div class="stat-card red"><div class="stat-value" id="aqHighPct">--</div><div class="stat-label">High Risk %</div></div>
+        </div>
+    </div>
+    <div class="card">
+        <h3>EHR Extracted Summary</h3>
+        <div id="aEhrSummary" style="color:var(--text-muted); font-size:0.88rem;">No EHR uploaded yet. Go to Assessment and upload a PDF.</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ HISTORY ═══════════════════════ -->
+<div class="page" id="page-history">
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+            <h1>Assessment History</h1>
+            <p>Previous patient assessments (session only)</p>
+        </div>
+        <button class="btn btn-outline" id="clearAssessHistBtn">Clear Assessment History</button>
+    </div>
+    <div id="assessHistoryList"></div>
+
+    <div style="margin-top:36px; padding-top:28px; border-top:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div>
+                <h2 style="font-size:1.2rem; font-weight:700; display:flex; align-items:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Queue History
+                </h2>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Session-only log stored in localStorage</p>
+            </div>
+            <button class="btn btn-danger" id="clearQueueHistBtn">Clear Queue History</button>
+        </div>
+        <div id="queueHistoryList"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ QUEUE STATUS ═══════════════════════ -->
+<div class="page" id="page-queue">
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+            <h1>Queue / Crowd Management</h1>
+            <p>Real-time patient queue monitoring and wait times</p>
+        </div>
+        <button class="btn btn-primary" id="refreshQueueBtn">↻ Refresh</button>
+    </div>
+    <div class="stats-grid" id="queueStatsGrid">
+        <div class="stat-card cyan"><div class="stat-value" id="qServing">--</div><div class="stat-label">Currently Serving</div></div>
+        <div class="stat-card blue"><div class="stat-value" id="qWaiting">--</div><div class="stat-label">Total Waiting</div></div>
+        <div class="stat-card amber"><div class="stat-value" id="qAvgWait">--</div><div class="stat-label">Avg Wait Time</div></div>
+        <div class="stat-card red"><div class="stat-value" id="qHighRisk">--</div><div class="stat-label">High Risk Waiting</div></div>
+    </div>
+
+    <!-- Position Tracker -->
+    <div class="card">
+        <h3>Queue Position</h3>
+        <div class="queue-position-wrap">
+            <div class="ring-container">
+                <svg viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="52" class="ring-bg"/>
+                    <circle cx="60" cy="60" r="52" class="ring-fill" id="qRingFill" style="stroke-dasharray:326.73; stroke-dashoffset:326.73;"/>
+                </svg>
+                <div class="ring-label">
+                    <span class="ring-value" id="qRingVal">--</span>
+                    <span class="ring-text">Position</span>
+                </div>
+            </div>
+            <div class="detail-rows" id="qPositionDetails"></div>
+        </div>
+    </div>
+
+    <!-- Wait Time Cards -->
+    <div class="stats-grid">
+        <div class="stat-card cyan"><div class="stat-value" id="qEstWait">--</div><div class="stat-label">Estimated Wait</div></div>
+        <div class="stat-card blue"><div class="stat-value" id="qAvgAll">--</div><div class="stat-label">Avg Wait (All Depts)</div></div>
+        <div class="stat-card red"><div class="stat-value" id="qLongest">--</div><div class="stat-label">Longest Dept Wait</div></div>
+    </div>
+
+    <!-- Queue Table -->
+    <div class="card" style="padding:0; overflow:hidden;">
+        <div style="padding:20px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin-bottom:0;">Live Patient Queue</h3>
+            <span class="api-badge mock" id="qSourceBadge">Loading…</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="data-table">
+                <thead><tr><th>#</th><th>Patient ID</th><th>Risk</th><th>Department</th><th>Arrival</th><th>Est. Wait</th><th>Status</th></tr></thead>
+                <tbody id="queueTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Dept Breakdown -->
+    <div class="card">
+        <h3>Wait Times by Department</h3>
+        <div id="qDeptBreakdown"></div>
+    </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- ═══════════════════════ JAVASCRIPT ═══════════════════════ -->
+<script>
+const API = 'http://localhost:5000/api';
+let apiOnline = false;
+let latestEhrSummary = '';
+const ASSESS_KEY = 'medtriage_test_assess_history';
+const QUEUE_KEY  = 'medtriage_test_queue_history';
+
+// ─── MOCK DATA ──────────────────────────────────────────────
+const MOCK = {
+    stats: {
+        total_records: 5247,
+        model_accuracy: 0.954,
+        risk_distribution: { Low: 2810, Medium: 1620, High: 817 },
+        arrival_mode_distribution: { walk_in: 2890, wheelchair: 1340, ambulance: 1017 },
+        feature_importances: {
+            heart_rate: 0.18, oxygen_saturation: 0.16, combined_risk_score: 0.14,
+            systolic_blood_pressure: 0.12, pain_level: 0.11, body_temperature: 0.09,
+            age: 0.08, chronic_disease_count: 0.06, previous_er_visits: 0.04, arrival_mode_ambulance: 0.02,
+        },
+        training_samples: 4198,
+        features_used: 14,
+    },
+    predict: {
+        risk_level: 'Medium',
+        confidence: 82.3,
+        departments: [{ name: 'Cardiology', score: 0.72 }, { name: 'Internal Medicine', score: 0.18 }],
+    },
+    ehrSummary: 'Patient with hypertension and mild fever. History of chronic diabetes. Current medications include metformin and lisinopril.',
+    queueStatus: {
+        current_serving: 12, total_waiting: 8, average_wait_time: 15, high_risk_count: 2,
+    },
+    queueList: [
+        { patient_id:'PT-4829', risk_level:'High',   department:'Emergency',        arrival_time:'14:02', est_wait:5,  status:'In Treatment' },
+        { patient_id:'PT-7213', risk_level:'High',   department:'Cardiology',       arrival_time:'14:08', est_wait:10, status:'Waiting' },
+        { patient_id:'PT-3051', risk_level:'Medium', department:'Pulmonology',      arrival_time:'14:11', est_wait:15, status:'Waiting' },
+        { patient_id:'PT-9467', risk_level:'Medium', department:'Internal Medicine',arrival_time:'13:45', est_wait:18, status:'Waiting' },
+        { patient_id:'PT-1184', risk_level:'Medium', department:'Cardiology',       arrival_time:'13:52', est_wait:22, status:'Waiting' },
+        { patient_id:'PT-6830', risk_level:'Low',    department:'General Practice', arrival_time:'14:15', est_wait:28, status:'Waiting' },
+        { patient_id:'PT-8741', risk_level:'Low',    department:'General Practice', arrival_time:'13:30', est_wait:32, status:'Waiting' },
+        { patient_id:'PT-4106', risk_level:'Low',    department:'Internal Medicine',arrival_time:'13:38', est_wait:35, status:'Waiting' },
+    ],
+    deptWaits: {
+        'Emergency':        { patients: 2, wait_minutes: 10 },
+        'Cardiology':       { patients: 2, wait_minutes: 22 },
+        'Internal Medicine':{ patients: 2, wait_minutes: 18 },
+        'Pulmonology':      { patients: 1, wait_minutes: 15 },
+        'General Practice': { patients: 2, wait_minutes: 32 },
+    },
+};
+
+// ─── NAV ────────────────────────────────────────────────────
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + btn.dataset.page).classList.add('active');
+    });
+});
+
+// ─── HELPERS ────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3200);
+}
+
+async function apiFetch(path, opts = {}) {
+    const res = await fetch(API + path, opts);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
+
+// ─── CHECK API ──────────────────────────────────────────────
+async function checkApi() {
+    const badge = document.getElementById('apiBadge');
+    try {
+        await apiFetch('/stats');
+        apiOnline = true;
+        badge.textContent = '● Live API';
+        badge.className = 'api-badge live';
+    } catch {
+        apiOnline = false;
+        badge.textContent = '● Mock Data';
+        badge.className = 'api-badge mock';
+        toast('Using demo data (backend not connected)', 'warn');
+    }
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+async function loadDashboard() {
+    let data;
+    try {
+        data = await apiFetch('/stats');
+    } catch { data = MOCK.stats; }
+
+    const dist = data.risk_distribution || {};
+    const total = data.total_records || Object.values(dist).reduce((a,b) => a+b, 0);
+
+    document.getElementById('dTotal').textContent  = total.toLocaleString();
+    document.getElementById('dLow').textContent    = (dist.Low    || 0).toLocaleString();
+    document.getElementById('dMedium').textContent = (dist.Medium || 0).toLocaleString();
+    document.getElementById('dHigh').textContent   = (dist.High   || 0).toLocaleString();
+
+    // Risk bars
+    const maxVal = Math.max(...Object.values(dist), 1);
+    const colors = { Low:'var(--risk-low)', Medium:'var(--risk-medium)', High:'var(--risk-high)' };
+    document.getElementById('dashRiskBars').innerHTML = Object.entries(dist).map(([k,v]) => `
+        <div class="bar-row">
+            <span class="bar-label">${k}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${(v/maxVal)*100}%; background:${colors[k]}"></div></div>
+            <span class="bar-val">${v.toLocaleString()}</span>
+        </div>`).join('');
+
+    // Model info
+    const acc = ((data.model_accuracy || 0.954) * 100).toFixed(1);
+    document.getElementById('dashModelInfo').innerHTML = `
+        Model Accuracy: <strong>${acc}%</strong> &nbsp;|&nbsp;
+        Training Samples: <strong>${(data.training_samples || 4198).toLocaleString()}</strong> &nbsp;|&nbsp;
+        Features: <strong>${data.features_used || 14}</strong>`;
+}
+
+// ═══════════════════════════════════════════════════
+// ASSESSMENT
+// ═══════════════════════════════════════════════════
+document.getElementById('assessForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const payload = {
+        age: +document.getElementById('f_age').value,
+        gender: document.getElementById('f_gender').value,
+        heart_rate: +document.getElementById('f_hr').value,
+        systolic_blood_pressure: +document.getElementById('f_bp').value,
+        body_temperature: +document.getElementById('f_temp').value,
+        oxygen_saturation: +document.getElementById('f_o2').value,
+        pain_level: +document.getElementById('f_pain').value,
+        chronic_disease_count: +document.getElementById('f_chronic').value,
+        arrival_mode: document.getElementById('f_arrival').value,
+        symptoms: document.getElementById('f_symptoms').value,
+    };
+
+    let result;
+    try {
+        result = await apiFetch('/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+    } catch {
+        // Dynamic mock based on vitals
+        const riskScore = (payload.heart_rate > 110 ? 2 : 0) + (payload.oxygen_saturation < 92 ? 2 : 0) +
+                          (payload.pain_level >= 7 ? 1 : 0) + (payload.body_temperature > 38.5 ? 1 : 0) +
+                          (payload.systolic_blood_pressure > 160 ? 1 : 0);
+        const risk = riskScore >= 4 ? 'High' : riskScore >= 2 ? 'Medium' : 'Low';
+        const dept = risk === 'High' ? 'Emergency' : risk === 'Medium' ? 'Cardiology' : 'General Practice';
+        result = {
+            risk_level: risk,
+            confidence: +(65 + Math.random() * 30).toFixed(1),
+            departments: [{ name: dept, score: 0.72 }],
+        };
+        toast('Using demo data (backend not connected)', 'warn');
+    }
+
+    showAssessmentResult(result);
+    saveAssessHistory(payload, result);
+    saveQueueEntry(result);
+});
+
+function showAssessmentResult(r) {
+    const box = document.getElementById('assessResult');
+    box.classList.remove('hidden');
+    const riskClass = r.risk_level.toLowerCase();
+    const dept = (r.departments && r.departments[0]) ? r.departments[0].name : 'General';
+    box.innerHTML = `
+        <h3>Prediction Result</h3>
+        <div class="result-risk" style="color: var(--risk-${riskClass})">${r.risk_level} Risk</div>
+        <div class="result-row"><span class="result-label">Confidence</span><span class="result-val">${r.confidence}%</span></div>
+        <div class="result-row"><span class="result-label">Department</span><span class="result-val">${dept}</span></div>
+        ${r.departments ? r.departments.map(d => `
+            <div class="result-row"><span class="result-label">${d.name}</span><span class="result-val">${(d.score*100).toFixed(0)}%</span></div>
+        `).join('') : ''}`;
+}
+
+// ─── EHR Upload ─────────────────────────────────────────────
+document.getElementById('uploadZone').addEventListener('click', () => document.getElementById('ehrFile').click());
+document.getElementById('ehrFile').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    let summary;
+    try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const data = await apiFetch('/summarize-ehr', { method: 'POST', body: fd });
+        summary = data.summary || data.text || JSON.stringify(data);
+    } catch {
+        summary = MOCK.ehrSummary;
+        toast('Using demo data (backend not connected)', 'warn');
+    }
+
+    latestEhrSummary = summary;
+    const box = document.getElementById('ehrResult');
+    box.classList.remove('hidden');
+    box.innerHTML = `<h3>EHR Summary</h3><p style="color:var(--text-secondary); line-height:1.6;">${summary}</p>`;
+
+    // Update analytics page
+    document.getElementById('aEhrSummary').innerHTML = `<p style="line-height:1.6; color:var(--text-secondary);">${summary}</p>`;
+});
+
+// ═══════════════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════════════
+async function loadAnalytics() {
+    let data;
+    try { data = await apiFetch('/stats'); } catch { data = MOCK.stats; }
+
+    document.getElementById('aAccuracy').textContent = ((data.model_accuracy || 0.954) * 100).toFixed(1) + '%';
+    document.getElementById('aSamples').textContent  = (data.training_samples || 4198).toLocaleString();
+    document.getElementById('aFeatures').textContent = data.features_used || 14;
+
+    // Feature importance
+    const fi = data.feature_importances || MOCK.stats.feature_importances;
+    const sorted = Object.entries(fi).sort((a,b) => b[1] - a[1]);
+    const maxFi = sorted[0]?.[1] || 1;
+    const featureColors = ['#ef4444','#3b82f6','#f59e0b','#8b5cf6','#06b6d4','#10b981','#ec4899','#f97316','#6366f1','#14b8a6'];
+    document.getElementById('aFeatureBars').innerHTML = sorted.map(([k,v], i) => {
+        const label = k.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+        return `<div class="bar-row">
+            <span class="bar-label">${label}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${(v/maxFi)*100}%; background:${featureColors[i%featureColors.length]}"></div></div>
+            <span class="bar-val">${(v*100).toFixed(0)}%</span>
+        </div>`;
+    }).join('');
+
+    // Queue insights in analytics
+    await loadAnalyticsQueueInsights();
+}
+
+async function loadAnalyticsQueueInsights() {
+    let stats;
+    try {
+        stats = await apiFetch('/queue/stats');
+        if (!stats.success) throw new Error();
+    } catch {
+        stats = { total_patients: MOCK.queueStatus.total_waiting, high_risk_count: MOCK.queueStatus.high_risk_count, average_wait_time: MOCK.queueStatus.average_wait_time };
+    }
+    const total = stats.total_patients || 0;
+    const high  = stats.high_risk_count || 0;
+    const pct   = total > 0 ? Math.round((high / total) * 100) : 0;
+    document.getElementById('aqSize').textContent    = total;
+    document.getElementById('aqWait').textContent    = (stats.average_wait_time || 0) + ' min';
+    document.getElementById('aqHighPct').textContent = pct + '%';
+}
+
+// ═══════════════════════════════════════════════════
+// QUEUE / CROWD MANAGEMENT
+// ═══════════════════════════════════════════════════
+let knownHighIds = new Set();
+
+async function loadQueue() {
+    const badge = document.getElementById('qSourceBadge');
+    badge.textContent = '● Loading…';
+    badge.className = 'api-badge mock';
+
+    let status, patients, deptWaits;
+    let isLive = false;
+
+    // Try /api/queue-status first, then /api/queue/stats
+    try {
+        status = await apiFetch('/queue-status');
+        isLive = true;
+    } catch {
+        try {
+            const s = await apiFetch('/queue/stats');
+            if (s.success) { status = { current_serving: s.total_patients > 0 ? 1 : 0, total_waiting: s.total_patients, average_wait_time: s.average_wait_time, high_risk_count: s.high_risk_count }; isLive = true; }
+            else throw new Error();
+        } catch { status = MOCK.queueStatus; }
+    }
+
+    // Try /api/queue-list, then /api/queue/all
+    try {
+        const d = await apiFetch('/queue-list');
+        patients = d.patients || d;
+        isLive = true;
+    } catch {
+        try {
+            const d = await apiFetch('/queue/all');
+            if (d.success) {
+                patients = [];
+                for (const [dept, info] of Object.entries(d.queues || {})) {
+                    (info.patients || []).forEach((p, i) => {
+                        patients.push({ patient_id: p.patient_id, risk_level: p.risk_level || 'Low', department: dept, arrival_time: p.arrival_time || '--:--', est_wait: (i+1)*5, status: i===0 ? 'In Treatment' : 'Waiting' });
+                    });
+                }
+                isLive = true;
+            } else throw new Error();
+        } catch { patients = MOCK.queueList; }
+    }
+
+    // Dept waits
+    try {
+        const s = await apiFetch('/queue/stats');
+        if (s.success && s.wait_times_by_department) {
+            deptWaits = {};
+            for (const [dept, wait] of Object.entries(s.wait_times_by_department)) {
+                deptWaits[dept] = { patients: (s.patients_per_department||{})[dept] || 0, wait_minutes: Math.round(wait) };
+            }
+            isLive = true;
+        } else throw new Error();
+    } catch { deptWaits = MOCK.deptWaits; }
+
+    badge.textContent = isLive ? '● Live' : '● Mock Data';
+    badge.className = 'api-badge ' + (isLive ? 'live' : 'mock');
+    if (!isLive) toast('Using demo data (backend not connected)', 'warn');
+
+    // Stats cards
+    document.getElementById('qServing').textContent  = status.current_serving;
+    document.getElementById('qWaiting').textContent  = status.total_waiting;
+    document.getElementById('qAvgWait').textContent  = status.average_wait_time + ' min';
+    document.getElementById('qHighRisk').textContent = status.high_risk_count;
+
+    // Position ring
+    const pos = 3, total = status.total_waiting || 8;
+    const circ = 2 * Math.PI * 52;
+    const progress = total > 0 ? (total - pos + 1) / total : 0;
+    const ring = document.getElementById('qRingFill');
+    ring.style.strokeDasharray  = circ;
+    ring.style.strokeDashoffset = circ * (1 - progress);
+    ring.style.stroke = pos <= 2 ? 'var(--risk-low)' : pos <= 5 ? 'var(--accent-blue)' : 'var(--risk-medium)';
+    document.getElementById('qRingVal').textContent = '#' + pos;
+    document.getElementById('qPositionDetails').innerHTML = `
+        <div class="detail-row"><span class="detail-key">Your position</span><span class="detail-val">#${pos}</span></div>
+        <div class="detail-row"><span class="detail-key">Patients ahead</span><span class="detail-val">${pos - 1}</span></div>
+        <div class="detail-row"><span class="detail-key">Total in queue</span><span class="detail-val">${total}</span></div>
+        <div class="detail-row"><span class="detail-key">Department</span><span class="detail-val" style="color:var(--accent-purple)">Emergency</span></div>`;
+
+    // Wait cards
+    const maxWait = Math.max(...Object.values(deptWaits).map(d => d.wait_minutes), 1);
+    document.getElementById('qEstWait').textContent = (pos * 5) + ' min';
+    document.getElementById('qAvgAll').textContent  = status.average_wait_time + ' min';
+    document.getElementById('qLongest').textContent = maxWait + ' min';
+
+    // Table
+    const currentHighIds = new Set();
+    const tbody = document.getElementById('queueTableBody');
+    tbody.innerHTML = patients.map((p, i) => {
+        const rc = (p.risk_level || 'low').toLowerCase();
+        const isNew = rc === 'high' && !knownHighIds.has(p.patient_id);
+        if (rc === 'high') currentHighIds.add(p.patient_id);
+        const sc = p.status === 'In Treatment' ? 'color:var(--accent-blue)' : p.status === 'Completed' ? 'color:var(--risk-low)' : 'color:var(--risk-medium)';
+        return `<tr${isNew ? ' class="high-risk-new"' : ''}>
+            <td>${i+1}</td><td>${p.patient_id}</td>
+            <td><span class="risk-badge ${rc}"><span class="risk-dot"></span>${p.risk_level}</span></td>
+            <td><span class="dept-badge">${p.department}</span></td>
+            <td>${p.arrival_time}</td><td>${p.est_wait} min</td>
+            <td style="font-weight:600; ${sc}">${p.status}</td></tr>`;
+    }).join('');
+    knownHighIds = currentHighIds;
+
+    // Dept breakdown
+    const sorted = Object.entries(deptWaits).sort((a,b) => b[1].wait_minutes - a[1].wait_minutes);
+    document.getElementById('qDeptBreakdown').innerHTML = sorted.map(([dept, info]) => `
+        <div class="bar-row">
+            <span class="bar-label">${dept}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${(info.wait_minutes/maxWait)*100}%; background:linear-gradient(90deg,var(--accent-blue),var(--accent-purple))"></div></div>
+            <span class="bar-val">${info.wait_minutes}m</span>
+        </div>`).join('');
+}
+
+document.getElementById('refreshQueueBtn').addEventListener('click', loadQueue);
+
+// ═══════════════════════════════════════════════════
+// HISTORY — Assessment (in-memory)
+// ═══════════════════════════════════════════════════
+let assessHistory = [];
+try { assessHistory = JSON.parse(localStorage.getItem(ASSESS_KEY)) || []; } catch {}
+
+function saveAssessHistory(patient, result) {
+    assessHistory.unshift({
+        timestamp: new Date().toLocaleString(),
+        patient,
+        result,
+    });
+    localStorage.setItem(ASSESS_KEY, JSON.stringify(assessHistory));
+    renderAssessHistory();
+}
+
+function renderAssessHistory() {
+    const el = document.getElementById('assessHistoryList');
+    if (!assessHistory.length) {
+        el.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>No assessments yet. Go to Assessment to start.</p></div>';
+        return;
+    }
+    el.innerHTML = assessHistory.map((item, i) => {
+        const rc = (item.result.risk_level || 'low').toLowerCase();
+        const dept = (item.result.departments && item.result.departments[0]) ? item.result.departments[0].name : 'N/A';
+        return `<div class="history-item">
+            <div class="history-num">${i+1}</div>
+            <div class="history-info">
+                <div class="history-title">Age ${item.patient.age} | HR ${item.patient.heart_rate} | O₂ ${item.patient.oxygen_saturation}%</div>
+                <div class="history-meta">${item.timestamp} | Confidence: ${item.result.confidence}%</div>
+            </div>
+            <div class="history-badges">
+                <span class="risk-badge ${rc}"><span class="risk-dot"></span>${item.result.risk_level}</span>
+                <span class="dept-badge">${dept}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+document.getElementById('clearAssessHistBtn').addEventListener('click', () => {
+    if (!confirm('Clear all assessment history?')) return;
+    assessHistory = [];
+    localStorage.removeItem(ASSESS_KEY);
+    renderAssessHistory();
+    toast('Assessment history cleared', 'info');
+});
+
+// ═══════════════════════════════════════════════════
+// HISTORY — Queue (localStorage)
+// ═══════════════════════════════════════════════════
+function getQueueHist() {
+    try { return JSON.parse(localStorage.getItem(QUEUE_KEY)) || []; } catch { return []; }
+}
+
+function saveQueueEntry(result) {
+    const id = 'PT-' + Date.now().toString(36).toUpperCase();
+    const dept = (result.departments && result.departments[0]) ? result.departments[0].name : 'General Practice';
+    const history = getQueueHist();
+    history.unshift({
+        patient_id: id,
+        risk_level: result.risk_level,
+        department: dept,
+        queue_number: history.length + 1,
+        timestamp: new Date().toLocaleString(),
+    });
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(history));
+    renderQueueHistory();
+}
+
+function renderQueueHistory() {
+    const el = document.getElementById('queueHistoryList');
+    const history = getQueueHist();
+    if (!history.length) {
+        el.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>No queue entries yet. Submit an assessment first.</p></div>';
+        return;
+    }
+    el.innerHTML = history.map(e => {
+        const rc = (e.risk_level || 'low').toLowerCase();
+        return `<div class="history-item">
+            <div class="history-num">#${e.queue_number}</div>
+            <div class="history-info">
+                <div class="history-title">${e.patient_id}</div>
+                <div class="history-meta">${e.timestamp}</div>
+            </div>
+            <div class="history-badges">
+                <span class="risk-badge ${rc}"><span class="risk-dot"></span>${e.risk_level}</span>
+                <span class="dept-badge">${e.department}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+document.getElementById('clearQueueHistBtn').addEventListener('click', () => {
+    if (!confirm('Clear all queue history?')) return;
+    localStorage.removeItem(QUEUE_KEY);
+    renderQueueHistory();
+    toast('Queue history cleared', 'info');
+});
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+(async function init() {
+    await checkApi();
+    loadDashboard();
+    loadAnalytics();
+    loadQueue();
+    renderAssessHistory();
+    renderQueueHistory();
+})();
+</script>
+</body>
+</html>

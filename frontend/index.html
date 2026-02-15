@@ -38,14 +38,14 @@
                         <rect x="14" y="14" width="7" height="7" />
                         <rect x="3" y="14" width="7" height="7" />
                     </svg>
-                    <span>Dashboard</span>
+                    <span data-i18n="nav.dashboard">Dashboard</span>
                 </a></li>
             <li><a href="#" class="nav-link" data-section="assessment" id="nav-assessment">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
                         <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
                     </svg>
-                    <span>Patient Assessment</span>
+                    <span data-i18n="nav.assessment">Patient Assessment</span>
                 </a></li>
             <li><a href="#" class="nav-link" data-section="analytics" id="nav-analytics">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -53,20 +53,40 @@
                         <line x1="12" y1="20" x2="12" y2="4" />
                         <line x1="6" y1="20" x2="6" y2="14" />
                     </svg>
-                    <span>Analytics</span>
+                    <span data-i18n="nav.analytics">Analytics</span>
                 </a></li>
             <li><a href="#" class="nav-link" data-section="history" id="nav-history">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                     </svg>
-                    <span>History</span>
+                    <span data-i18n="nav.history">History</span>
+                </a></li>
+            <li><a href="#" class="nav-link" data-section="queue" id="nav-queue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span data-i18n="nav.queue">Queue Management</span>
                 </a></li>
         </ul>
         <div class="sidebar-footer">
+            <!-- Language Switcher -->
+            <div class="lang-switcher" id="langSwitcher">
+                <span class="lang-label" data-i18n="lang.label">Language</span>
+                <div class="lang-buttons">
+                    <button class="lang-btn active" data-lang="en" title="English">EN</button>
+                    <button class="lang-btn" data-lang="ta" title="தமிழ்">தமி</button>
+                    <button class="lang-btn" data-lang="hi" title="हिन्दी">हिं</button>
+                    <button class="lang-btn" data-lang="te" title="తెలుగు">తె</button>
+                    <button class="lang-btn" data-lang="ml" title="മലയാളം">മല</button>
+                </div>
+            </div>
             <div class="model-badge">
                 <div class="model-status"></div>
-                <span>AI Model Active</span>
+                <span data-i18n="sidebar.aiActive">AI Model Active</span>
             </div>
         </div>
     </nav>
@@ -91,8 +111,8 @@
         <section class="section active" id="section-dashboard">
             <div class="section-header">
                 <div>
-                    <h1>Dashboard Overview</h1>
-                    <p class="section-subtitle">Real-time medical triage insights and statistics</p>
+                    <h1 data-i18n="dash.title">Dashboard Overview</h1>
+                    <p class="section-subtitle" data-i18n="dash.subtitle">Real-time medical triage insights and statistics</p>
                 </div>
                 <div class="header-badge">
                     <span class="accuracy-badge" id="accuracyBadge">Model: Loading...</span>
@@ -112,7 +132,7 @@
                     </div>
                     <div class="stat-info">
                         <span class="stat-value" id="totalPatients">--</span>
-                        <span class="stat-label">Total Records</span>
+                        <span class="stat-label" data-i18n="dash.totalRecords">Total Records</span>
                     </div>
                 </div>
                 <div class="stat-card stat-card-low">
@@ -124,7 +144,7 @@
                     </div>
                     <div class="stat-info">
                         <span class="stat-value" id="lowCount">--</span>
-                        <span class="stat-label">Low Risk</span>
+                        <span class="stat-label" data-i18n="dash.lowRisk">Low Risk</span>
                     </div>
                 </div>
                 <div class="stat-card stat-card-medium">
@@ -138,7 +158,7 @@
                     </div>
                     <div class="stat-info">
                         <span class="stat-value" id="mediumCount">--</span>
-                        <span class="stat-label">Medium Risk</span>
+                        <span class="stat-label" data-i18n="dash.mediumRisk">Medium Risk</span>
                     </div>
                 </div>
                 <div class="stat-card stat-card-high">
@@ -151,7 +171,7 @@
                     </div>
                     <div class="stat-info">
                         <span class="stat-value" id="highCount">--</span>
-                        <span class="stat-label">High Risk</span>
+                        <span class="stat-label" data-i18n="dash.highRisk">High Risk</span>
                     </div>
                 </div>
             </div>
@@ -159,22 +179,22 @@
             <!-- Charts Row -->
             <div class="charts-grid">
                 <div class="chart-card">
-                    <h3>Risk Distribution</h3>
+                    <h3 data-i18n="dash.riskDistribution">Risk Distribution</h3>
                     <div class="chart-container" id="riskDistChart"></div>
                 </div>
                 <div class="chart-card">
-                    <h3>Arrival Mode Distribution</h3>
+                    <h3 data-i18n="dash.arrivalMode">Arrival Mode Distribution</h3>
                     <div class="chart-container" id="arrivalChart"></div>
                 </div>
                 <div class="chart-card">
-                    <h3>Feature Importance</h3>
+                    <h3 data-i18n="dash.featureImportance">Feature Importance</h3>
                     <div class="chart-container" id="featureChart"></div>
                 </div>
             </div>
 
             <!-- Vitals Overview -->
             <div class="vitals-overview">
-                <h3>Dataset Vitals Overview</h3>
+                <h3 data-i18n="dash.vitalsOverview">Dataset Vitals Overview</h3>
                 <div class="vitals-grid" id="vitalsGrid"></div>
             </div>
         </section>
@@ -183,8 +203,8 @@
         <section class="section" id="section-assessment">
             <div class="section-header">
                 <div>
-                    <h1>Patient Assessment</h1>
-                    <p class="section-subtitle">Enter patient data for AI-powered risk classification</p>
+                    <h1 data-i18n="assess.title">Patient Assessment</h1>
+                    <p class="section-subtitle" data-i18n="assess.subtitle">Enter patient data for AI-powered risk classification</p>
                 </div>
             </div>
 
@@ -192,29 +212,46 @@
                 <!-- Input Form -->
                 <div class="form-card">
                     <div class="form-header">
-                        <h3>Patient Information</h3>
+                        <div class="form-title-group">
+                            <div class="form-title-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 data-i18n="assess.patientInfo">Patient Information</h3>
+                                <p class="form-header-sub" data-i18n="assess.formSubtitle">Fill in patient details for AI-powered triage</p>
+                            </div>
+                        </div>
                         <div class="form-actions">
                             <button class="btn btn-outline" id="uploadEhrBtn">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
-                                    height="16">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="17 8 12 3 7 8" />
-                                    <line x1="12" y1="3" x2="12" y2="15" />
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
                                 </svg>
-                                Upload EHR/EMR
+                                <span data-i18n="assess.uploadEhr">Upload EHR/EMR</span>
                             </button>
                             <input type="file" id="ehrFileInput" accept=".pdf" style="display:none">
-                            <button class="btn btn-outline" id="sampleDataBtn">Load Sample</button>
+                            <button class="btn btn-outline" id="sampleDataBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
+                                <span data-i18n="assess.loadSample">Load Sample</span>
+                            </button>
                         </div>
                     </div>
 
                     <!-- Upload Status -->
                     <div class="upload-status" id="uploadStatus" style="display:none">
                         <div class="upload-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"
-                                height="20">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
                             </svg>
                         </div>
                         <div class="upload-info">
@@ -224,83 +261,264 @@
                     </div>
 
                     <form id="patientForm">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="age">Age (years)</label>
-                                <input type="number" id="age" name="age" min="0" max="120" step="0.1" required
-                                    placeholder="e.g. 45">
+                        <!-- Section: Personal Details -->
+                        <div class="form-section">
+                            <div class="form-section-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                <span data-i18n="assess.personalDetails">Personal Details</span>
                             </div>
-                            <div class="form-group">
-                                <label for="gender">Gender</label>
-                                <select id="gender" name="gender">
-                                    <option value="">Select</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="heart_rate">Heart Rate (bpm)</label>
-                                <input type="number" id="heart_rate" name="heart_rate" min="30" max="220" step="0.1"
-                                    required placeholder="60-100 normal">
-                            </div>
-                            <div class="form-group">
-                                <label for="systolic_blood_pressure">Systolic BP (mmHg)</label>
-                                <input type="number" id="systolic_blood_pressure" name="systolic_blood_pressure"
-                                    min="60" max="250" step="0.1" required placeholder="90-120 normal">
-                            </div>
-                            <div class="form-group">
-                                <label for="oxygen_saturation">O2 Saturation (%)</label>
-                                <input type="number" id="oxygen_saturation" name="oxygen_saturation" min="50" max="100"
-                                    step="0.1" required placeholder="95-100 normal">
-                            </div>
-                            <div class="form-group">
-                                <label for="body_temperature">Temperature (C)</label>
-                                <input type="number" id="body_temperature" name="body_temperature" min="34" max="42"
-                                    step="0.01" required placeholder="36.1-37.2 normal">
-                            </div>
-                            <div class="form-group">
-                                <label for="pain_level">Pain Level (1-10)</label>
-                                <input type="range" id="pain_level" name="pain_level" min="1" max="10" value="3">
-                                <div class="range-labels">
-                                    <span>1 - Mild</span>
-                                    <span class="pain-value" id="painValue">3</span>
-                                    <span>10 - Severe</span>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="patient_name">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                        <span data-i18n="assess.patientName">Patient Name</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="patient_name" name="patient_name" required placeholder="e.g. John Doe">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mobile_number">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                                            <line x1="12" y1="18" x2="12.01" y2="18"/>
+                                        </svg>
+                                        <span data-i18n="assess.mobileNumber">Mobile Number</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <input type="tel" id="mobile_number" name="mobile_number" required placeholder="e.g. +91 9876543210" pattern="[+]?[0-9\s\-]{7,15}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="age">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        <span data-i18n="assess.age">Age (years)</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="age" name="age" min="0" max="120" step="0.1" required placeholder="e.g. 45">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="gender">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                        <span data-i18n="assess.gender">Gender</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <select id="gender" name="gender">
+                                            <option value="" data-i18n="assess.selectGender">Select Gender</option>
+                                            <option value="male" data-i18n="assess.male">Male</option>
+                                            <option value="female" data-i18n="assess.female">Female</option>
+                                            <option value="other" data-i18n="assess.other">Other</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label for="chronic_disease_count">Chronic Diseases</label>
-                                <input type="number" id="chronic_disease_count" name="chronic_disease_count" min="0"
-                                    max="10" value="0" required>
+                        </div>
+
+                        <!-- Section: Vital Signs -->
+                        <div class="form-section">
+                            <div class="form-section-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                </svg>
+                                <span data-i18n="assess.vitalSigns">Vital Signs</span>
+                                <span class="form-section-badge" data-i18n="assess.critical">Critical</span>
                             </div>
-                            <div class="form-group">
-                                <label for="previous_er_visits">Previous ER Visits</label>
-                                <input type="number" id="previous_er_visits" name="previous_er_visits" min="0" max="20"
-                                    value="0" required>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="heart_rate">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                        </svg>
+                                        <span data-i18n="assess.heartRate">Heart Rate</span>
+                                        <span class="label-unit">bpm</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="heart_rate" name="heart_rate" min="30" max="220" step="0.1" required placeholder="60-100 normal">
+                                        <span class="input-hint">Normal: 60-100</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="systolic_blood_pressure">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                        </svg>
+                                        <span data-i18n="assess.systolicBP">Systolic BP</span>
+                                        <span class="label-unit">mmHg</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="systolic_blood_pressure" name="systolic_blood_pressure" min="60" max="250" step="0.1" required placeholder="90-120 normal">
+                                        <span class="input-hint">Normal: 90-120</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="oxygen_saturation">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M8 12h8"/>
+                                            <path d="M12 8v8"/>
+                                        </svg>
+                                        <span data-i18n="assess.o2Saturation">O2 Saturation</span>
+                                        <span class="label-unit">%</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="oxygen_saturation" name="oxygen_saturation" min="50" max="100" step="0.1" required placeholder="95-100 normal">
+                                        <span class="input-hint">Normal: 95-100</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="body_temperature">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                                        </svg>
+                                        <span data-i18n="assess.temperature">Temperature</span>
+                                        <span class="label-unit">°C</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="body_temperature" name="body_temperature" min="34" max="42" step="0.01" required placeholder="36.1-37.2 normal">
+                                        <span class="input-hint">Normal: 36.1-37.2</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="arrival_mode">Arrival Mode</label>
-                                <select id="arrival_mode" name="arrival_mode" required>
-                                    <option value="walk_in">Walk-in</option>
-                                    <option value="wheelchair">Wheelchair</option>
-                                    <option value="ambulance">Ambulance</option>
-                                </select>
+                        </div>
+
+                        <!-- Section: Clinical Assessment -->
+                        <div class="form-section">
+                            <div class="form-section-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                    <polyline points="16 17 21 12 16 7"/>
+                                    <line x1="21" y1="12" x2="9" y2="12"/>
+                                </svg>
+                                <span data-i18n="assess.clinicalAssessment">Clinical Assessment</span>
                             </div>
-                            <div class="form-group full-width">
-                                <label for="symptoms">Symptoms / Notes</label>
-                                <textarea id="symptoms" name="symptoms" rows="2"
-                                    placeholder="Describe symptoms (optional)..."></textarea>
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label for="pain_level">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                        </svg>
+                                        <span data-i18n="assess.painLevel">Pain Level</span>
+                                    </label>
+                                    <div class="pain-slider-wrap">
+                                        <input type="range" id="pain_level" name="pain_level" min="1" max="10" value="3">
+                                        <div class="range-labels">
+                                            <span data-i18n="assess.mild">1 - Mild</span>
+                                            <span class="pain-value" id="painValue">3</span>
+                                            <span data-i18n="assess.severe">10 - Severe</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chronic_disease_count">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="12" y1="8" x2="12" y2="16"/>
+                                            <line x1="8" y1="12" x2="16" y2="12"/>
+                                        </svg>
+                                        <span data-i18n="assess.chronicDiseases">Chronic Diseases</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="chronic_disease_count" name="chronic_disease_count" min="0" max="10" value="0" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="previous_er_visits">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        <span data-i18n="assess.previousER">Previous ER Visits</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="previous_er_visits" name="previous_er_visits" min="0" max="20" value="0" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="arrival_mode">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                            <circle cx="5.5" cy="17.5" r="2.5"/>
+                                            <circle cx="18.5" cy="17.5" r="2.5"/>
+                                            <path d="M8 17.5h8"/>
+                                            <path d="M15 7l3 10"/>
+                                            <path d="M3 10h4l2-5h6"/>
+                                        </svg>
+                                        <span data-i18n="assess.arrivalMode">Arrival Mode</span>
+                                    </label>
+                                    <div class="input-wrapper">
+                                        <select id="arrival_mode" name="arrival_mode" required>
+                                            <option value="walk_in" data-i18n="assess.walkIn">Walk-in</option>
+                                            <option value="wheelchair" data-i18n="assess.wheelchair">Wheelchair</option>
+                                            <option value="ambulance" data-i18n="assess.ambulance">Ambulance</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section: Notes -->
+                        <div class="form-section">
+                            <div class="form-section-header">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
+                                <span data-i18n="assess.additionalNotes">Additional Notes</span>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label for="symptoms" data-i18n="assess.symptomsNotes">Symptoms / Notes</label>
+                                    <textarea id="symptoms" name="symptoms" rows="3" data-i18n="assess.symptomsPlaceholder" placeholder="Describe symptoms, observations, or any relevant clinical notes..."></textarea>
+                                </div>
                             </div>
                         </div>
                         <div class="form-footer">
-                            <button type="button" class="btn btn-outline" id="resetBtn">Reset</button>
-                            <button type="submit" class="btn btn-primary" id="assessBtn">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
-                                    height="18">
-                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                            <div class="form-footer-info">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                                 </svg>
-                                Run AI Assessment
-                            </button>
+                                <span data-i18n="assess.securityNote">All data is processed securely and never stored externally</span>
+                            </div>
+                            <div class="form-footer-actions">
+                                <button type="button" class="btn btn-outline" id="resetBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                        <polyline points="1 4 1 10 7 10"/>
+                                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                                    </svg>
+                                    <span data-i18n="assess.resetForm">Reset Form</span>
+                                </button>
+                                <button type="submit" class="btn btn-assess" id="assessBtn">
+                                    <div class="btn-assess-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                            <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/>
+                                            <path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/>
+                                            <circle cx="20" cy="10" r="2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="btn-assess-text">
+                                        <span class="btn-assess-label" data-i18n="assess.runAI">Run AI Assessment</span>
+                                        <span class="btn-assess-sub" data-i18n="assess.runAISub">Analyze vitals &amp; generate triage</span>
+                                    </div>
+                                    <svg class="btn-assess-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                        <polyline points="12 5 19 12 12 19"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -308,21 +526,163 @@
                 <!-- Results Panel -->
                 <div class="results-panel" id="resultsPanel">
                     <div class="results-placeholder" id="resultsPlaceholder">
-                        <div class="placeholder-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64"
-                                height="64">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                            </svg>
+                        <!-- Gradient Border Glow -->
+                        <div class="rp-glow-border"></div>
+
+                        <!-- Header Row -->
+                        <div class="rp-header-row">
+                            <div class="rp-badge">
+                                <span class="rp-badge-dot"></span>
+                                <span data-i18n="results.aiReady">AI Engine Ready</span>
+                            </div>
+                            <div class="rp-model-tag">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                    <line x1="8" y1="21" x2="16" y2="21"/>
+                                    <line x1="12" y1="17" x2="12" y2="21"/>
+                                </svg>
+                                GBM + RF Ensemble
+                            </div>
                         </div>
-                        <h3>Awaiting Patient Data</h3>
-                        <p>Fill in patient information and click "Run AI Assessment" to get risk classification,
-                            department recommendations, and explainable insights.</p>
+
+                        <!-- Central Animated Orb -->
+                        <div class="rp-orb-container">
+                            <div class="rp-orb-track">
+                                <div class="rp-orbit-dot rp-dot-1"></div>
+                                <div class="rp-orbit-dot rp-dot-2"></div>
+                                <div class="rp-orbit-dot rp-dot-3"></div>
+                            </div>
+                            <div class="rp-orb-core">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <h3 data-i18n="results.awaitingData">Awaiting Patient Data</h3>
+                        <p class="rp-subtitle" data-i18n="results.subtitle">Complete the assessment form to trigger the AI-powered triage pipeline</p>
+
+                        <!-- Connected Timeline Pipeline -->
+                        <div class="rp-timeline">
+                            <div class="rp-timeline-header">
+                                <span data-i18n="results.pipeline">Assessment Pipeline</span>
+                                <span class="rp-timeline-status">0 / 3 Complete</span>
+                            </div>
+                            <div class="rp-timeline-track">
+                                <div class="rp-tl-step">
+                                    <div class="rp-tl-node">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14 2 14 8 20 8"/>
+                                        </svg>
+                                    </div>
+                                    <div class="rp-tl-connector"></div>
+                                    <div class="rp-tl-content">
+                                        <span class="rp-tl-label" data-i18n="results.dataCollection">Data Collection</span>
+                                        <span class="rp-tl-desc" data-i18n="results.dataCollectionDesc">Vitals, demographics &amp; history</span>
+                                    </div>
+                                    <span class="rp-tl-tag pending">Pending</span>
+                                </div>
+                                <div class="rp-tl-step">
+                                    <div class="rp-tl-node">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                                            <circle cx="12" cy="12" r="3"/>
+                                            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                                        </svg>
+                                    </div>
+                                    <div class="rp-tl-connector"></div>
+                                    <div class="rp-tl-content">
+                                        <span class="rp-tl-label" data-i18n="results.mlInference">ML Inference</span>
+                                        <span class="rp-tl-desc" data-i18n="results.mlInferenceDesc">Model scoring &amp; confidence</span>
+                                    </div>
+                                    <span class="rp-tl-tag pending">Pending</span>
+                                </div>
+                                <div class="rp-tl-step">
+                                    <div class="rp-tl-node">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                            <polyline points="22 4 12 14.01 9 11.01"/>
+                                        </svg>
+                                    </div>
+                                    <div class="rp-tl-content">
+                                        <span class="rp-tl-label" data-i18n="results.resultsInsights">Results &amp; Insights</span>
+                                        <span class="rp-tl-desc" data-i18n="results.resultsInsightsDesc">Risk class, dept &amp; explainability</span>
+                                    </div>
+                                    <span class="rp-tl-tag pending">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature Cards -->
+                        <div class="rp-features">
+                            <div class="rp-feature rp-feat-risk">
+                                <div class="rp-feature-top"></div>
+                                <div class="rp-feature-icon risk-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    </svg>
+                                </div>
+                                <span class="rp-feature-label" data-i18n="results.riskClassification">Risk Classification</span>
+                                <span class="rp-feature-desc" data-i18n="results.riskDesc">3-tier severity scoring</span>
+                                <div class="rp-feature-chips">
+                                    <span class="rp-chip rp-chip-low">Low</span>
+                                    <span class="rp-chip rp-chip-med">Medium</span>
+                                    <span class="rp-chip rp-chip-high">High</span>
+                                </div>
+                            </div>
+                            <div class="rp-feature rp-feat-dept">
+                                <div class="rp-feature-top"></div>
+                                <div class="rp-feature-icon dept-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                        <polyline points="9 22 9 12 15 12 15 22"/>
+                                    </svg>
+                                </div>
+                                <span class="rp-feature-label" data-i18n="results.deptRouting">Dept. Routing</span>
+                                <span class="rp-feature-desc" data-i18n="results.deptRoutingDesc">Smart ward assignment</span>
+                                <div class="rp-feature-chips">
+                                    <span class="rp-chip rp-chip-neutral">ER</span>
+                                    <span class="rp-chip rp-chip-neutral">Cardio</span>
+                                    <span class="rp-chip rp-chip-neutral">+3</span>
+                                </div>
+                            </div>
+                            <div class="rp-feature rp-feat-explain">
+                                <div class="rp-feature-top"></div>
+                                <div class="rp-feature-icon explain-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                    </svg>
+                                </div>
+                                <span class="rp-feature-label" data-i18n="results.explainability">Explainability</span>
+                                <span class="rp-feature-desc" data-i18n="results.explainabilityDesc">Feature importance map</span>
+                                <div class="rp-feature-mini-bars">
+                                    <div class="rp-mini-bar" style="width:90%"></div>
+                                    <div class="rp-mini-bar" style="width:65%"></div>
+                                    <div class="rp-mini-bar" style="width:40%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="rp-footer">
+                            <div class="rp-footer-tip">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                </svg>
+                                <span data-i18n="results.proTip">Pro tip: Upload an EHR/EMR PDF to auto-populate all fields instantly</span>
+                            </div>
+                            <div class="rp-footer-meta">
+                                <span>Latency: ~120ms</span>
+                                <span>|</span>
+                                <span>HIPAA Ready</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="results-content" id="resultsContent" style="display:none">
                         <!-- Risk Gauge -->
                         <div class="risk-gauge-card" id="riskGaugeCard">
-                            <h3>Risk Classification</h3>
+                            <h3 data-i18n="results.riskClassification">Risk Classification</h3>
                             <div class="gauge-container">
                                 <div class="gauge" id="riskGauge">
                                     <div class="gauge-fill" id="gaugeFill"></div>
@@ -337,14 +697,14 @@
 
                         <!-- Department Recommendation -->
                         <div class="dept-card">
-                            <h3>Department Recommendation</h3>
+                            <h3 data-i18n="results.deptRecommendation">Department Recommendation</h3>
                             <div class="dept-list" id="deptList"></div>
                         </div>
 
                         <!-- Explainability -->
                         <div class="explain-card">
-                            <h3>Contributing Factors</h3>
-                            <p class="explain-subtitle">Key factors influencing the risk classification</p>
+                            <h3 data-i18n="results.contributingFactors">Contributing Factors</h3>
+                            <p class="explain-subtitle" data-i18n="results.contributingDesc">Key factors influencing the risk classification</p>
                             <div class="contributions-list" id="contributionsList"></div>
                         </div>
                     </div>
@@ -356,26 +716,188 @@
         <section class="section" id="section-analytics">
             <div class="section-header">
                 <div>
-                    <h1>Analytics & Insights</h1>
-                    <p class="section-subtitle">Deep dive into dataset patterns and model performance</p>
+                    <h1 data-i18n="analytics.title">Analytics & Insights</h1>
+                    <p class="section-subtitle" data-i18n="analytics.subtitle">Deep dive into dataset patterns and model performance</p>
                 </div>
             </div>
 
             <div class="analytics-grid">
-                <div class="chart-card large">
-                    <h3>Model Performance</h3>
-                    <div class="model-stats" id="modelStats"></div>
-                </div>
-                <div class="chart-card" id="ehrSummaryCard">
-                    <h3>EHR Extracted Summary</h3>
-                    <div class="chart-container" id="ehrSummaryContent">
-                        <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No EHR uploaded yet. Go
-                            to Patient Assessment and upload a PDF.</p>
+                <div class="chart-card large ehr-card" id="ehrSummaryCard">
+                    <!-- EHR Header -->
+                    <div class="ehr-header">
+                        <div class="ehr-header-left">
+                            <div class="ehr-icon-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10 9 9 9 8 9"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="ehr-title" data-i18n="analytics.ehrTitle">EHR Extracted Summary</h3>
+                                <p class="ehr-subtitle" data-i18n="analytics.ehrSubtitle">AI-powered extraction from uploaded medical records</p>
+                            </div>
+                        </div>
+                        <div class="ehr-header-right">
+                            <span class="ehr-status-badge" id="ehrStatusBadge">
+                                <span class="ehr-status-dot"></span>
+                                <span data-i18n="analytics.awaitingUpload">Awaiting Upload</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- EHR Content -->
+                    <div class="ehr-content" id="ehrSummaryContent">
+                        <div class="ehr-empty-state">
+                            <div class="ehr-empty-visual">
+                                <div class="ehr-empty-rings">
+                                    <div class="ehr-ring ehr-ring-1"></div>
+                                    <div class="ehr-ring ehr-ring-2"></div>
+                                    <div class="ehr-ring ehr-ring-3"></div>
+                                </div>
+                                <div class="ehr-empty-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <h4 class="ehr-empty-title" data-i18n="analytics.noRecord">No Medical Record Uploaded</h4>
+                            <p class="ehr-empty-desc" data-i18n="analytics.uploadDesc" data-i18n-html="true">Upload an EHR/EMR PDF in the <strong>Patient Assessment</strong> section to auto-extract clinical data using our AI pipeline.</p>
+                            <div class="ehr-empty-features">
+                                <div class="ehr-ef-item">
+                                    <div class="ehr-ef-icon" style="background: rgba(59,130,246,0.1); color: var(--accent-blue);">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+                                    </div>
+                                    <span data-i18n="analytics.demographics">Demographics</span>
+                                </div>
+                                <div class="ehr-ef-item">
+                                    <div class="ehr-ef-icon" style="background: rgba(220,38,38,0.1); color: var(--risk-high);">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                                    </div>
+                                    <span data-i18n="assess.vitalSigns">Vital Signs</span>
+                                </div>
+                                <div class="ehr-ef-item">
+                                    <div class="ehr-ef-icon" style="background: rgba(5,150,105,0.1); color: var(--risk-low);">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                                    </div>
+                                    <span data-i18n="analytics.diagnosis">Diagnosis</span>
+                                </div>
+                                <div class="ehr-ef-item">
+                                    <div class="ehr-ef-icon" style="background: rgba(217,119,6,0.1); color: var(--risk-medium);">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                    </div>
+                                    <span data-i18n="analytics.allergies">Allergies</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="chart-card">
-                    <h3>Vitals Correlation</h3>
-                    <div class="chart-container" id="vitalsCorrelation"></div>
+                <div class="chart-card large qi-card-v2" id="queueInsightsCard">
+                    <div class="qi2-header">
+                        <div class="qi2-header-left">
+                            <div class="qi2-icon-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="qi2-title" data-i18n="analytics.queueTitle">Queue Insights & Analytics</h3>
+                                <p class="qi2-subtitle" data-i18n="analytics.queueSubtitle">Real-time patient queue monitoring and department analytics</p>
+                            </div>
+                        </div>
+                        <div class="qi2-header-right">
+                            <span class="qi-source" id="qiSourceBadge">Loading…</span>
+                            <span class="qi2-timestamp" id="qiTimestamp"></span>
+                        </div>
+                    </div>
+
+                    <!-- Top metrics row -->
+                    <div class="qi2-metrics-row" id="qiMetrics">
+                        <div class="qi2-metric-card qi2-mc-blue">
+                            <div class="qi2-mc-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            </div>
+                            <div class="qi2-mc-body">
+                                <span class="qi2-mc-value" id="qiQueueSize">--</span>
+                                <span class="qi2-mc-label" data-i18n="analytics.queueSize">Queue Size</span>
+                            </div>
+                            <div class="qi2-mc-trend qi2-trend-up" id="qiSizeTrend">+2</div>
+                        </div>
+                        <div class="qi2-metric-card qi2-mc-cyan">
+                            <div class="qi2-mc-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </div>
+                            <div class="qi2-mc-body">
+                                <span class="qi2-mc-value" id="qiAvgWait">--</span>
+                                <span class="qi2-mc-label" data-i18n="analytics.avgWait">Avg Wait Time</span>
+                            </div>
+                            <div class="qi2-mc-trend qi2-trend-down" id="qiWaitTrend">-3m</div>
+                        </div>
+                        <div class="qi2-metric-card qi2-mc-red">
+                            <div class="qi2-mc-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            </div>
+                            <div class="qi2-mc-body">
+                                <span class="qi2-mc-value" id="qiHighPct">--</span>
+                                <span class="qi2-mc-label" data-i18n="dash.highRisk">High Risk</span>
+                            </div>
+                        </div>
+                        <div class="qi2-metric-card qi2-mc-green">
+                            <div class="qi2-mc-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            </div>
+                            <div class="qi2-mc-body">
+                                <span class="qi2-mc-value" id="qiThroughput">--</span>
+                                <span class="qi2-mc-label" data-i18n="analytics.throughput">Throughput/hr</span>
+                            </div>
+                        </div>
+                        <div class="qi2-metric-card qi2-mc-purple">
+                            <div class="qi2-mc-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            </div>
+                            <div class="qi2-mc-body">
+                                <span class="qi2-mc-value" id="qiPeakHour">--</span>
+                                <span class="qi2-mc-label" data-i18n="analytics.peakHour">Peak Hour</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom panels -->
+                    <div class="qi2-panels">
+                        <div class="qi2-panel">
+                            <h4 class="qi2-panel-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                                <span data-i18n="dash.riskDistribution">Risk Distribution</span>
+                            </h4>
+                            <div class="qi2-risk-bars" id="qiBarSection"></div>
+                        </div>
+                        <div class="qi2-panel">
+                            <h4 class="qi2-panel-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                                <span data-i18n="analytics.deptLoad">Department Load</span>
+                            </h4>
+                            <div class="qi2-dept-list" id="qiDeptBreakdown"></div>
+                        </div>
+                        <div class="qi2-panel">
+                            <h4 class="qi2-panel-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                <span data-i18n="analytics.waitBreakdown">Wait Time Breakdown</span>
+                            </h4>
+                            <div class="qi2-wait-breakdown" id="qiWaitBreakdown"></div>
+                        </div>
+                    </div>
+
+                    <div class="qi2-footer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span data-i18n="analytics.queueFooter">Queue data refreshes automatically. Priority scoring uses the Dynamic Weighted Priority Scheduling algorithm.</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -384,10 +906,10 @@
         <section class="section" id="section-history">
             <div class="section-header">
                 <div>
-                    <h1>Assessment History</h1>
-                    <p class="section-subtitle">Previous patient assessments during this session</p>
+                    <h1 data-i18n="history.title">Assessment History</h1>
+                    <p class="section-subtitle" data-i18n="history.subtitle">Previous patient assessments during this session</p>
                 </div>
-                <button class="btn btn-outline" id="clearHistoryBtn">Clear History</button>
+                <button class="btn btn-outline" id="clearHistoryBtn" data-i18n="history.clearHistory">Clear History</button>
             </div>
             <div class="history-list" id="historyList">
                 <div class="empty-state">
@@ -396,20 +918,226 @@
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                     </svg>
-                    <p>No assessments yet. Go to Patient Assessment to start.</p>
+                    <p data-i18n="history.noAssessments">No assessments yet. Go to Patient Assessment to start.</p>
+                </div>
+            </div>
+
+            <!-- Queue History (Session Only) -->
+            <div class="qh-section">
+                <div class="qh-section-header">
+                    <div>
+                        <h2 class="qh-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            <span data-i18n="history.queueHistory">Queue History</span>
+                        </h2>
+                        <p class="qh-subtitle" data-i18n="history.queueSubtitle">Session-only log of patients added to the queue</p>
+                    </div>
+                    <button class="btn btn-outline qh-clear-btn" id="clearQueueHistoryBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        <span data-i18n="history.clearQueue">Clear Queue History</span>
+                    </button>
+                </div>
+                <div class="qh-list" id="queueHistoryList">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                        </svg>
+                        <p data-i18n="history.noQueue">No queue entries yet. Patients are logged here after assessment.</p>
+                    </div>
                 </div>
             </div>
         </section>
+        <!-- Queue Management Section -->
+        <section class="section" id="section-queue">
+            <div class="section-header">
+                <div>
+                    <h1 data-i18n="queue.title">Queue Management</h1>
+                    <p class="section-subtitle" data-i18n="queue.subtitle">Real-time hospital queue and patient flow optimization</p>
+                </div>
+                <div class="header-controls">
+                    <span class="qm-updated" id="qmUpdatedText">Updated Just Now</span>
+                    <div class="qm-toggle-wrap">
+                        <span data-i18n="queue.autoRefresh">Auto-Refresh</span>
+                        <div class="qm-toggle-track" id="qmAutoRefreshToggle"><div class="qm-toggle-knob"></div></div>
+                    </div>
+                    <button class="btn" id="qmRefreshBtn">↻ <span data-i18n="queue.refresh">Refresh</span></button>
+                </div>
+            </div>
+
+            <!-- Queue Stats Row -->
+            <div class="qm-stats-row">
+                <div class="qm-stat-card">
+                    <div class="qm-stat-info">
+                        <div class="qm-stat-label" data-i18n="queue.totalPatients">Total Patients</div>
+                        <div class="qm-stat-value" id="qmTotalPatients">0</div>
+                    </div>
+                    <div class="qm-stat-chart">
+                        <svg viewBox="0 0 80 45" fill="none"><path d="M5 35 Q15 30 20 25 T35 20 Q45 18 50 22 T65 15 Q72 12 75 10" stroke="var(--accent-blue)" stroke-width="2" fill="none"/><path d="M5 35 Q15 30 20 25 T35 20 Q45 18 50 22 T65 15 Q72 12 75 10 L75 45 L5 45Z" fill="var(--accent-blue)" opacity="0.1"/></svg>
+                    </div>
+                </div>
+                <div class="qm-stat-card qm-stat-danger">
+                    <div class="qm-stat-info">
+                        <div class="qm-stat-label" data-i18n="dash.highRisk">High Risk</div>
+                        <div class="qm-stat-value" id="qmHighRisk">0 <span style="font-size:13px;color:var(--text-muted);font-weight:400">(↑)</span></div>
+                    </div>
+                    <div class="qm-stat-chart">
+                        <svg viewBox="0 0 80 45" fill="none"><path d="M5 30 Q15 28 20 32 T35 25 Q45 20 55 18 T75 10" stroke="var(--risk-high)" stroke-width="2" fill="none"/><path d="M5 30 Q15 28 20 32 T35 25 Q45 20 55 18 T75 10 L75 45 L5 45Z" fill="var(--risk-high)" opacity="0.1"/></svg>
+                    </div>
+                </div>
+                <div class="qm-stat-card">
+                    <div class="qm-stat-info">
+                        <div class="qm-stat-label" data-i18n="queue.avgWaitTime">Average Wait Time</div>
+                        <div class="qm-stat-value" id="qmAvgWait">0 <span style="font-size:16px;font-weight:400;color:var(--text-secondary)">min</span></div>
+                    </div>
+                    <div class="qm-stat-chart">
+                        <svg viewBox="0 0 50 50" fill="none"><circle cx="25" cy="25" r="20" stroke="var(--bg-input)" stroke-width="5" fill="none"/><circle cx="25" cy="25" r="20" stroke="var(--accent-blue)" stroke-width="5" fill="none" stroke-dasharray="90 126" stroke-dashoffset="0" transform="rotate(-90 25 25)"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qm-layout">
+                <!-- Queue Main Content -->
+                <div class="qm-main">
+                    <!-- Active Patient Queue -->
+                    <div class="qm-queue-card">
+                        <div class="qm-queue-header">
+                            <h2 data-i18n="queue.activeQueue">Active Patient Queue</h2>
+                            <div class="qm-tabs" id="qmTabs">
+                                <button class="qm-tab active" data-dept="all" data-i18n="queue.all">All</button>
+                                <button class="qm-tab" data-dept="Emergency" data-i18n="queue.emergency">Emergency</button>
+                                <button class="qm-tab" data-dept="Cardiology" data-i18n="queue.cardiology">Cardiology</button>
+                                <button class="qm-tab" data-dept="Pulmonology" data-i18n="queue.pulmonary">Pulmonary</button>
+                                <button class="qm-tab" data-dept="Internal Medicine" data-i18n="queue.internalMed">Internal Med</button>
+                            </div>
+                        </div>
+                        <table class="qm-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="queue.queueCol">Queue</th>
+                                    <th data-i18n="queue.patientId">Patient ID</th>
+                                    <th class="qm-sortable" data-sort="risk"><span data-i18n="queue.riskLevel">Risk Level</span> ⇅</th>
+                                    <th data-i18n="assess.arrivalMode">Arrival Mode</th>
+                                    <th data-i18n="queue.department">Department</th>
+                                    <th class="qm-sortable" data-sort="wait"><span data-i18n="queue.waitTime">Wait Time</span> ⇅</th>
+                                    <th data-i18n="queue.status">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="qmQueueBody">
+                                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">Loading queue data...</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="qm-table-footer">
+                            <div class="qm-toggle-wrap">
+                                <div class="qm-toggle-track qm-toggle-sm" id="qmTableAutoRefresh"><div class="qm-toggle-knob"></div></div>
+                                <span>Auto-Refresh</span>
+                            </div>
+                            <span>• Last updated: <strong id="qmTableLastUpdate">Just Now</strong></span>
+                            <span style="margin-left:auto">↻ Refresh Every</span>
+                            <select id="qmRefreshInterval"><option value="30">30s</option><option value="15">15s</option><option value="60">60s</option></select>
+                            <button class="btn" id="qmTableRefreshBtn">↻ Refresh</button>
+                        </div>
+                    </div>
+
+                    <!-- Bottom metrics row -->
+                    <div class="qm-bottom-grid">
+                        <div class="qm-metrics-card">
+                            <h3 data-i18n="queue.metrics">Queue Metrics</h3>
+                            <div class="qm-metric-row"><span class="qm-metric-label">Total Patients:</span><span class="qm-metric-val" id="qmMetricTotal">0 <span class="qm-pct qm-pct-red">🔴 0%</span></span></div>
+                            <div class="qm-metric-row"><span class="qm-metric-label">High Risk Patients:</span><span class="qm-metric-val" id="qmMetricHigh">0</span></div>
+                            <div class="qm-metric-row"><span class="qm-metric-label">Avg Wait Time:</span><span class="qm-metric-val" id="qmMetricWait">0 min</span></div>
+                            <div class="qm-legend">
+                                <div class="qm-legend-item"><div class="qm-legend-dot" style="background:var(--risk-high)"></div> High</div>
+                                <div class="qm-legend-item"><div class="qm-legend-dot" style="background:var(--risk-medium)"></div> Medium</div>
+                                <div class="qm-legend-item"><div class="qm-legend-dot" style="background:var(--risk-low)"></div> Low</div>
+                            </div>
+                        </div>
+                        <div class="qm-metrics-card">
+                            <h3 data-i18n="queue.avgWaitByDept">Avg Wait by Department</h3>
+                            <div id="qmDeptWaitBars"></div>
+                            <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+                                <button class="btn btn-green" id="qmDeptRefreshBtn">↻ Refresh</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Queue Side Panel -->
+                <div class="qm-side">
+                    <!-- Patient Summary -->
+                    <div class="qm-side-card" id="qmSummaryCard">
+                        <h3 data-i18n="queue.summary">Summary</h3>
+                        <div class="qm-patient-summary" id="qmPatientSummary">
+                            <div class="qm-summary-avatar">👤</div>
+                            <div class="qm-summary-info">
+                                <div class="qm-summary-name" data-i18n="queue.selectPatient">Select a patient</div>
+                                <div class="qm-summary-id">--</div>
+                            </div>
+                        </div>
+                        <div class="qm-summary-details" id="qmSummaryDetails">
+                            <div class="qm-detail-row"><span class="qm-detail-label">Patient:</span><span class="qm-detail-value">--</span></div>
+                            <div class="qm-detail-row"><span class="qm-detail-label">Risk Level:</span><span class="qm-detail-value">--</span></div>
+                            <div class="qm-detail-row"><span class="qm-detail-label">Department:</span><span class="qm-detail-value">--</span></div>
+                            <div class="qm-detail-row"><span class="qm-detail-label">Wait Time:</span><span class="qm-detail-value">--</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Wait Time Forecast -->
+                    <div class="qm-side-card">
+                        <h3 data-i18n="queue.waitForecast">Wait Time Forecast</h3>
+                        <div class="qm-forecast-chart">
+                            <svg viewBox="0 0 260 100" fill="none" width="100%">
+                                <line x1="30" y1="15" x2="250" y2="15" stroke="var(--border)" stroke-width="0.5"/>
+                                <line x1="30" y1="45" x2="250" y2="45" stroke="var(--border)" stroke-width="0.5"/>
+                                <line x1="30" y1="75" x2="250" y2="75" stroke="var(--border)" stroke-width="0.5"/>
+                                <text x="5" y="18" font-size="8" fill="var(--text-muted)">10 min</text>
+                                <text x="5" y="48" font-size="8" fill="var(--text-muted)">5 min</text>
+                                <text x="60" y="95" font-size="8" fill="var(--text-muted)">15 min</text>
+                                <text x="130" y="95" font-size="8" fill="var(--text-muted)">25 min</text>
+                                <text x="210" y="95" font-size="8" fill="var(--text-muted)">30 min</text>
+                                <path d="M40 65 Q80 60 100 55 Q130 50 160 45 Q190 35 220 20 Q235 14 245 10" stroke="var(--risk-high)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                <path d="M40 65 Q80 60 100 55 Q130 50 160 45 Q190 35 220 20 Q235 14 245 10 L245 80 L40 80Z" fill="var(--risk-high)" opacity="0.08"/>
+                                <circle cx="100" cy="55" r="3" fill="var(--risk-high)"/>
+                                <circle cx="160" cy="45" r="3" fill="var(--risk-high)"/>
+                                <circle cx="220" cy="20" r="3" fill="var(--risk-high)"/>
+                            </svg>
+                        </div>
+                        <div class="qm-alert-box">
+                            <span class="qm-alert-icon">⚠️</span>
+                            <span data-i18n="queue.congestionAlert">High congestion likely in 30 min. Alert staff to prepare.</span>
+                        </div>
+                    </div>
+
+                    <!-- High Risk Patients -->
+                    <div class="qm-side-card">
+                        <h3 data-i18n="queue.potentialHighRisk">Potential High Risk Patients</h3>
+                        <div id="qmHighRiskPatients">
+                            <p style="color:var(--text-muted);font-size:0.85rem" data-i18n="queue.noHighRisk">No high risk patients detected.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay" style="display:none">
         <div class="loading-spinner">
             <div class="spinner-ring"></div>
-            <p>Analyzing patient data...</p>
+            <p data-i18n="loading.analyzing">Analyzing patient data...</p>
         </div>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="app.js"></script>
 </body>
 
